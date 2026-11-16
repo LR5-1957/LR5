@@ -1,76 +1,79 @@
 # LR5.ch · La ligue des curieux
 
 Site de quiz et de mini-jeux pour les **9-10 ans** (créé pour Lorenzo) : Football, Géographie, Étoiles & espace.
-C'est un **site statique** : de simples fichiers HTML, CSS et JavaScript. Pas de base de données, pas de serveur, pas d'installation, pas d'étape de « build ».
+C'est un **site statique** : de simples fichiers HTML, CSS et JavaScript. Pas de base de données, pas de compte, pas d'étape de « build ».
 
 ## Ce qu'il y a dedans
 
-- **3 univers et un « Grand mélange »** : 358 questions en tout (104 sur le foot, 129 en géographie, 125 sur l'espace)
-- **3 niveaux** : Découverte (facile pour 9 ans), Explorateur (moyen), Expert (un vrai défi pour un curieux de 10 ans)
-- **Quiz rapide** (10 questions), **Défi chrono** (60 secondes) et **Question du jour** (la même pour tout le monde, chaque jour)
-- **« Le savais-tu ? »** après chaque réponse
-- **Étoiles ⭐, badges et album**
-- **Mini-jeux** : L'épreuve des 11 mètres (penalties) et le Memory des drapeaux
-- **Espace parents** (`parents.html`) : il explique qu'il n'y a ni compte, ni collecte, ni pub, et que la progression reste sur l'appareil
-
-Les questions et les réponses sont mélangées à chaque partie, et une question ne revient pas pendant la même session tant que le paquet n'est pas épuisé.
+- **3 univers et un « Grand mélange »** : 505 questions (152 foot, 183 géographie, 170 espace), toutes vérifiées.
+- **3 niveaux** : Découverte, Explorateur, Expert.
+- **Quiz rapide** (10 questions), **Défi chrono** (60 secondes), **Question du jour** (la même pour tout le monde, jamais deux fois la même avant d'avoir fait le tour) et **Revoir mes erreurs**.
+- **Pas de question répétée** : le site se souvient (sur l'appareil) des questions déjà posées et fait le tour de toutes avant d'en reposer une. Les questions « sœurs » (qui se donnent la réponse) ne tombent jamais dans la même partie.
+- **🔊 Écouter** : la question et les réponses sont lues à voix haute (voix de l'iPad, sans Internet).
+- **Étoiles ⭐, rangs, tenues de la mascotte, badges bronze/argent/or et album**.
+- **Mini-jeux** : l'épreuve des 11 mètres (viser + jauge de tir) et le Memory des drapeaux.
+- **Espace parents** (`parents.html`) : statistiques par univers, **code de sauvegarde** pour garder ou déplacer la progression, copie automatique, conseil « écran d'accueil ».
+- **Marche hors ligne** une fois ouvert (voiture, avion) et s'installe comme une app (icône sur l'écran d'accueil).
 
 ## Structure
 
 ```
-index.html          page principale (toutes les pages du jeu, navigation par #/...)
-parents.html        espace parents
-js/config.js        ★ LA CONFIGURATION : nom, slogan, couleurs, mascotte, univers, niveaux, badges
-js/app.js           moteur : quiz, chrono, question du jour, étoiles, badges, album
-js/penalty.js       mini-jeu des penalties
-js/memory.js        mini-jeu memory des drapeaux
-js/flags.js         drapeaux dessinés en SVG (sans aucune image externe)
-data/football.js    questions du foot
-data/geographie.js  questions de géographie
-data/espace.js      questions sur l'espace
-css/style.css       style
-assets/mascotte.svg mascotte (Lino le lynx, maillot n°5)
-assets/favicon.svg  icône d'onglet
-tools/valider-questions.js   vérifie les questions
-vercel.json         en-têtes de sécurité (bloque tout script ou contenu externe)
+index.html            page principale (navigation par #/...)
+parents.html          espace parents          404.html   page « introuvable »
+js/config.js          ★ LA CONFIGURATION du site (nom, mascotte, niveaux, badges, réglages des jeux)
+js/app.js             moteur : quiz, chrono, question du jour, étoiles, badges, album, sauvegarde
+js/penalty.js         mini-jeu des penalties          js/memory.js   memory des drapeaux
+js/parents.js         partie dynamique de l'espace parents
+js/flags.js           drapeaux dessinés en SVG (aucune image externe)
+data/*.js             les questions (football, geographie, espace)
+css/style.css         style commun        css/theme.css   couleurs du site
+assets/               mascotte, favicon, icônes d'écran d'accueil, image d'aperçu (og.png)
+sw.js                 mode hors ligne     manifest.webmanifest   installation sur l'écran d'accueil
+tools/valider-questions.js   vérifie les questions (à lancer avant chaque mise en ligne)
+vercel.json           en-têtes de sécurité          robots.txt
 ```
+
+`js/app.js`, `penalty.js`, `memory.js`, `parents.js`, `flags.js`, `css/style.css` et `tools/` sont **identiques sur lr5.ch et ar7.ch**.
+Ce qui est propre au site : `js/config.js`, `data/`, `assets/`, `css/theme.css` et les pages HTML.
+
+## Réglages utiles (`js/config.js`)
+
+| Clé | Rôle |
+|---|---|
+| `stockage` | nom de la sauvegarde sur l'appareil (**ne jamais changer**, sinon les étoiles repartent à zéro) |
+| `quiz.nbQuestions`, `quiz.chronoSecondes`, `quiz.chronoAlerte` | longueur du quiz, durée du chrono, clignotement des 10 dernières secondes |
+| `jour.difficultes` | niveaux possibles pour la question du jour |
+| `lecture.vitesse` | vitesse de la voix « Écouter » (1 = normale) |
+| `penalty.gardienDepart / gardienParBut / gardienMax` | difficulté du gardien ; `penalty.jauge` : jauge d'adresse |
+| `memory.drapeaux`, `pairesDepart`, `pairesMax` | drapeaux du memory et nombre de paires |
+| `rangs`, `tenues`, `badges` | récompenses |
 
 ## Ajouter ou corriger une question
 
-1. Ouvre le fichier de l'univers, par exemple `data/espace.js`.
-2. Copie une ligne `{ "id": ..., ... },` et colle-la à la fin de la liste, avant `];`.
-3. Change :
-   - `id` : un identifiant **unique**, par exemple `"esp-126"`
-   - `theme` : la petite étiquette affichée, par exemple `"Planètes"`
-   - `difficulte` : `1` (facile), `2` (moyen) ou `3` (difficile)
-   - `question`, puis `choix` : **exactement 4** réponses
-   - `bonne_reponse` : la position de la bonne réponse dans `choix`, **en comptant à partir de 0** (0 = la 1re, 1 = la 2e, 2 = la 3e, 3 = la 4e)
-   - `savais_tu` : l'anecdote affichée après la réponse
-   - `drapeau` (facultatif) : le code d'un pays de `js/flags.js` (`"ch"`, `"fr"`, `"jp"`…), pour afficher un drapeau
-4. Vérifie avec Node.js (si tu l'as) : `node tools/valider-questions.js`. Il contrôle les 4 choix, la bonne réponse, les identifiants en double, etc.
-
-Ce n'est pas grave si la bonne réponse est toujours la première de la liste : les réponses sont mélangées à l'affichage.
-Écris seulement des faits stables et vérifiés. Évite les choses qui changent, comme l'équipe actuelle d'un joueur ou les derniers résultats.
-
-## Ajouter un univers
-
-1. Crée `data/animaux.js` sur le modèle des autres, avec `window.QUIZ_QUESTIONS.animaux = [ ... ];`.
-2. Ajoute une ligne dans `univers` dans `js/config.js` : `{ id: "animaux", nom: "Animaux", emoji: "🦊", description: "...", fichier: "data/animaux.js" }`.
-3. Ajoute une couleur de carte dans `css/style.css` : `.u-animaux{background:linear-gradient(135deg,#xxxxxx,#yyyyyy)}`.
-
-## Créer le site frère (ar7.ch pour Alessandro)
-
-Tout ce qui est propre au site est dans `js/config.js`, `assets/` et `data/`. Pour ar7.ch :
-1. Copie tout le dossier dans un nouveau dépôt `ar7`.
-2. Dans `js/config.js`, change `nom`, `domaine`, `slogan`, `public`, **`stockage`** (par exemple `"ar7:v1"`, pour que les deux sites ne mélangent pas leurs étoiles), `mascotte`, `couleurs` et les niveaux. Pour un enfant de 7 ans, on peut aussi baisser `quiz.nbQuestions` et monter `quiz.chronoSecondes`.
-3. Remplace `assets/mascotte.svg` et adapte les questions dans `data/` (des phrases plus courtes et du vocabulaire simple pour 7 ans).
+1. Ouvre le fichier de l'univers, par exemple `data/espace.js`, et copie une ligne `{ "id": ..., ... },` avant `];`.
+2. Champs :
+   - `id` : identifiant **unique** (ex. `"esp-200"`) ; `theme` : petite étiquette ; `difficulte` : 1, 2 ou 3
+   - `question`, `choix` (**exactement 4**), `bonne_reponse` : position de la bonne réponse **en comptant depuis 0**
+   - `savais_tu` : l'anecdote. **Attention** : elle ne doit pas donner la réponse d'une autre question !
+   - `drapeau` (facultatif) : code pays de `js/flags.js` (`"ch"`, `"fr"`…)
+   - `groupe` (facultatif) : même valeur pour des questions qui se donnent la réponse ; elles ne tomberont jamais ensemble
+   - `maj` (facultatif) : année de vérification d'un fait qui peut changer (record, actualité) ; le validateur rappellera de le revérifier
+3. Vérifie avec Node.js : `node tools/valider-questions.js` (et `--details` pour voir les avertissements).
+   Il contrôle les 4 choix, les doublons et quasi-doublons, les anecdotes qui « spoilent », les drapeaux jumeaux
+   (Colombie/Équateur…), la typographie et qu'il y a assez de questions par niveau.
 
 ## Tester sur ton ordinateur
 
-Double-clique sur `index.html`, le site marche même sans serveur. Ou, dans le dossier :
-`python3 -m http.server 8000`, puis ouvre http://localhost:8000
+Dans le dossier : `python3 -m http.server 8000`, puis ouvre http://localhost:8000
 
+## Mettre à jour le site (GitHub → Vercel)
+
+Le site est relié à Vercel : **chaque fichier envoyé sur GitHub met le site à jour tout seul** (en 1 minute environ).
+Sur la page du dépôt : **Add file → Upload files**, glisse **le contenu** du dossier (pas le dossier lui-même), puis **Commit changes**.
+Les fichiers de même nom sont remplacés.
 
 ## Vie privée
 
-Il n'y a aucun traceur, aucune statistique, aucune police ni aucun script externe, et aucun cookie. La progression (étoiles, badges) est gardée dans le `localStorage` du navigateur, sur l'appareil seulement. `vercel.json` ajoute une politique de sécurité (CSP) qui interdit de charger quoi que ce soit hors du site.
+Aucun traceur, aucune statistique, aucun cookie, aucune police ni script externe. La progression reste dans le navigateur de l'appareil
+(`localStorage`). `vercel.json` ajoute une politique de sécurité stricte (CSP) qui interdit de charger quoi que ce soit hors du site.
+Règle d'or : jamais de nom de famille, d'école ou de photo des enfants sur le site.

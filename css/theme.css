@@ -1,0 +1,23 @@
+/* Couleurs et tailles propres à ce site (LR5). Le reste du style est dans style.css (partagé). */
+:root{
+  --primaire:#c8102e;
+  --primaire-f:#8f0a1f;
+  --fonce:#111111;
+  --doux:#f6eaea;
+  --bord:#a3777e;
+  --fond:#f7f3f2;
+  --fond-a:#fbe1e4;
+  --fond-b:#ececec;
+  --survol:#fff7f7;
+  --mix-a:#c8102e;
+  --mix-b:#111111;
+  --crowd-a:#c8102e;
+  --crowd-b:#111111;
+  --texte:#1a1a1a;
+  --fs:18px;
+  --fs-m:17px;
+  --q-fs:1.45rem;
+  --q-fs-m:1.25rem;
+  --a-fs:1.1rem;
+  --a-h:70px;
+}

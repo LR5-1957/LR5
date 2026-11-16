@@ -1,49 +1,72 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<title>Espace parents · LR5</title>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Espace parents · LR5</title>
+<meta name="description" content="Quiz et mini-jeux pour les 9-10 ans : football, géographie, étoiles et espace. Sans compte, sans pub, sans traçage.">
 <meta name="theme-color" content="#c8102e">
+<meta name="color-scheme" content="light">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="LR5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_CH">
+<meta property="og:site_name" content="LR5">
+<meta property="og:title" content="LR5 · La ligue des curieux">
+<meta property="og:description" content="Quiz et mini-jeux pour les 9-10 ans : football, géographie, étoiles et espace. Sans compte, sans pub, sans traçage.">
+<meta property="og:url" content="https://www.lr5.ch/">
+<meta property="og:image" content="https://www.lr5.ch/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LR5, La ligue des curieux : la mascotte Lino">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/config.js" defer></script>
 <script src="js/flags.js" defer></script>
 <script src="js/app.js" defer></script>
+<script src="js/parents.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#content">Aller au contenu</a>
 <header class="topbar">
-  <a class="logo" href="index.html#/"><img data-mascotte src="assets/mascotte.svg" alt="" width="46" height="46"><span><b data-cfg="nom">LR5</b><small data-cfg="slogan">La ligue des curieux</small></span></a>
+  <a class="logo" href="index.html#/"><img src="assets/mascotte.svg" alt="" width="46" height="46"><span><b data-cfg="nom">LR5</b><small data-cfg="slogan">La ligue des curieux</small></span></a>
   <nav aria-label="Menu">
-    <a class="pill" href="index.html#/jour">📅 <span>Du jour</span></a>
-    <a class="pill" href="index.html#/album">🏅 <span>Album</span></a>
-    <a class="pill stars" href="index.html#/album" aria-label="Mes étoiles">⭐ <span id="nb-etoiles">0</span></a>
+    <a class="pill" href="index.html#/jour"><span aria-hidden="true">📅</span> <span class="lbl">Du jour</span></a>
+    <a class="pill" href="index.html#/album"><span aria-hidden="true">🏅</span> <span class="lbl">Album</span></a>
+    <a class="pill stars" id="pill-etoiles" href="index.html#/album" aria-label="Mes étoiles"><span aria-hidden="true">⭐</span> <span id="nb-etoiles">0</span></a>
   </nav>
 </header>
 <main class="prose" id="content">
 <h1>Espace parents</h1>
-<p><b data-cfg="nom">LR5</b> est un petit site familial de quiz et de mini-jeux pour les enfants de 9-10 ans : football, géographie (capitales, drapeaux, monnaies), étoiles et espace. Chaque réponse est suivie d'une courte explication « Le savais-tu ? ».</p>
-<h2>Vie privée : rien ne quitte l'appareil</h2>
+<p><b>LR5</b> est un petit site familial de quiz et de mini-jeux pour les enfants de 9-10 ans : football, géographie (capitales, drapeaux, pays, animaux), étoiles et espace. Chaque réponse est suivie d’une courte explication « Le savais-tu ? ».</p>
+<h2>Vie privée : rien ne quitte l’appareil</h2>
 <ul>
   <li><b>Aucun compte</b>, aucun nom, aucune adresse e-mail, aucun mot de passe.</li>
   <li><b>Aucune donnée collectée</b> : pas de cookies, pas de statistiques de visite, pas de publicité, pas de traceurs, pas de services tiers (même les polices et les images sont incluses dans le site).</li>
-  <li><b>Pas de chat</b> ni d'échange entre enfants.</li>
-  <li>Les étoiles et badges sont gardés <b>uniquement dans le navigateur de l'appareil</b> (stockage local). Ils disparaissent si vous effacez les données du navigateur, et ne sont pas partagés entre appareils.</li>
-  <li>Vous pouvez tout effacer à tout moment : page <a href="index.html#/album">Mon album</a> → « Tout remettre à zéro ».</li>
+  <li><b>Pas de chat</b> ni d’échange entre enfants.</li>
+  <li>Les étoiles, badges et erreurs à revoir sont gardés <b>uniquement dans le navigateur de l’appareil</b> (stockage local). Ils ne sont pas partagés entre appareils : utilisez le code de sauvegarde ci-dessous pour les déplacer.</li>
+  <li>La lecture à voix haute (bouton 🔊) utilise la voix intégrée à l’appareil : aucun son n’est envoyé sur Internet.</li>
+  <li>Vous pouvez tout effacer à tout moment : page <a href="index.html#/album">Mon album</a> → « Tout remettre à zéro » (une petite multiplication protège ce bouton).</li>
   <li>Aucun achat, aucun abonnement.</li>
 </ul>
+<div id="parents-dyn"><p>Chargement de la progression…</p></div>
 <h2>Le contenu</h2>
 <ul>
-  <li>Plus de 350 questions, écrites pour des enfants de 9-10 ans, sur trois niveaux : <b>Découverte</b> (facile), <b>Explorateur</b> (moyen) et <b>Expert</b> (un vrai défi).</li>
-  <li>Les questions portent sur des faits stables (pas de résultats sportifs récents ni de transferts de joueurs).</li>
-  <li>Vous avez repéré une erreur ? Signalez-la à la personne qui gère le site, elle se corrige en une ligne.</li>
+  <li>Plus de 500 questions, écrites pour des enfants de 9-10 ans, sur trois niveaux : <b>Découverte</b> (facile), <b>Explorateur</b> (moyen) et <b>Expert</b> (un vrai défi).</li>
+  <li>Une question n’est jamais reposée tant que l’enfant n’a pas vu toutes les autres du même niveau, même d’un jour à l’autre.</li>
+  <li>Les questions portent surtout sur des faits stables. Les quelques résultats sportifs ou missions spatiales récents (Coupe du monde 2026, Artemis II…) ont été vérifiés en novembre 2026.</li>
+  <li>Vous avez repéré une erreur ? Dites-le à la personne qui a offert le site : elle se corrige en une ligne.</li>
 </ul>
-<h2>Temps d'écran</h2>
-<p>Un quiz rapide dure environ 5 minutes. L'idée : une petite partie, puis raconter à table l'anecdote apprise !</p>
+<h2>Temps d’écran</h2>
+<p>Un quiz rapide dure environ 5 minutes. L’idée : une petite partie, puis raconter à table l’anecdote apprise !</p>
 <p><a class="btn" href="index.html#/">← Retour au site</a></p>
 </main>
-<footer class="footer"><p><span data-cfg="domaine">lr5.ch</span> · Apprendre en s'amusant · Aucun compte, aucune pub, aucun traçage. · <a href="parents.html">Espace parents</a></p></footer>
+<footer class="footer"><p><span data-cfg="domaine">lr5.ch</span> · Apprendre en s’amusant · Aucun compte, aucune pub, aucun traçage. · <a href="parents.html">Espace parents</a></p></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

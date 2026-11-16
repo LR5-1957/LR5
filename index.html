@@ -1,12 +1,30 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<title>LR5 · La ligue des curieux</title>
-<meta name="description" content="Quiz et mini-jeux pour les 9-10 ans : football, géographie, étoiles et espace.">
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LR5 · La ligue des curieux</title>
+<meta name="description" content="Quiz et mini-jeux pour les 9-10 ans : football, géographie, étoiles et espace. Sans compte, sans pub, sans traçage.">
 <meta name="theme-color" content="#c8102e">
+<meta name="color-scheme" content="light">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="LR5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_CH">
+<meta property="og:site_name" content="LR5">
+<meta property="og:title" content="LR5 · La ligue des curieux">
+<meta property="og:description" content="Quiz et mini-jeux pour les 9-10 ans : football, géographie, étoiles et espace. Sans compte, sans pub, sans traçage.">
+<meta property="og:url" content="https://www.lr5.ch/">
+<meta property="og:image" content="https://www.lr5.ch/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LR5, La ligue des curieux : la mascotte Lino">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="css/theme.css">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/config.js" defer></script>
 <script src="js/flags.js" defer></script>
@@ -17,15 +35,15 @@
 <body>
 <a class="skip" href="#app">Aller au contenu</a>
 <header class="topbar">
-  <a class="logo" href="index.html#/"><img data-mascotte src="assets/mascotte.svg" alt="" width="46" height="46"><span><b data-cfg="nom">LR5</b><small data-cfg="slogan">La ligue des curieux</small></span></a>
+  <a class="logo" href="index.html#/"><img src="assets/mascotte.svg" alt="" width="46" height="46"><span><b data-cfg="nom">LR5</b><small data-cfg="slogan">La ligue des curieux</small></span></a>
   <nav aria-label="Menu">
-    <a class="pill" href="index.html#/jour">📅 <span>Du jour</span></a>
-    <a class="pill" href="index.html#/album">🏅 <span>Album</span></a>
-    <a class="pill stars" href="index.html#/album" aria-label="Mes étoiles">⭐ <span id="nb-etoiles">0</span></a>
+    <a class="pill" href="index.html#/jour"><span aria-hidden="true">📅</span> <span class="lbl">Du jour</span></a>
+    <a class="pill" href="index.html#/album"><span aria-hidden="true">🏅</span> <span class="lbl">Album</span></a>
+    <a class="pill stars" id="pill-etoiles" href="index.html#/album" aria-label="Mes étoiles"><span aria-hidden="true">⭐</span> <span id="nb-etoiles">0</span></a>
   </nav>
 </header>
 <main id="app" tabindex="-1"><p>Chargement…</p><noscript><p>Ce site a besoin de JavaScript pour fonctionner (aucun traçage, promis !).</p></noscript></main>
-<footer class="footer"><p><span data-cfg="domaine">lr5.ch</span> · Apprendre en s'amusant · Aucun compte, aucune pub, aucun traçage. · <a href="parents.html">Espace parents</a></p></footer>
+<footer class="footer"><p><span data-cfg="domaine">lr5.ch</span> · Apprendre en s’amusant · Aucun compte, aucune pub, aucun traçage. · <a href="parents.html">Espace parents</a></p></footer>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* Drapeaux dessinés en SVG (aucune image externe).
+/* Drapeaux dessinés en SVG (aucune image externe). Moteur partagé LR5/AR7.
  * Formes simplifiées, sans armoiries. Pour ajouter un drapeau : ajoute une entrée dans FLAGS. */
 (function () {
   "use strict";
@@ -26,7 +26,13 @@
     se: { nom: "Suède", t: "nordic", bg: "#006AA7", fg: "#FECC02" },
     dk: { nom: "Danemark", t: "nordic", bg: "#C8102E", fg: "#fff" },
     fi: { nom: "Finlande", t: "nordic", bg: "#fff", fg: "#002F6C" },
-    no: { nom: "Norvège", t: "nordic", bg: "#BA0C2F", fg: "#00205B", border: "#fff" }
+    no: { nom: "Norvège", t: "nordic", bg: "#BA0C2F", fg: "#00205B", border: "#fff" },
+    is: { nom: "Islande", t: "nordic", bg: "#02529C", fg: "#DC1E35", border: "#fff" },
+    es: { nom: "Espagne", t: "es" },
+    cz: { nom: "Tchéquie", t: "cz" },
+    gr: { nom: "Grèce", t: "gr" },
+    tr: { nom: "Turquie", t: "tr" },
+    gb: { nom: "Royaume-Uni", t: "gb" }
   };
 
   function svg(code, label) {
@@ -37,6 +43,18 @@
       s = '<rect width="60" height="60" fill="#DA291C"/><path d="M25 12h10v13h13v10H35v13H25V35H12V25h13z" fill="#fff"/>';
     } else if (f.t === "co") {
       s = '<rect width="90" height="30" fill="#FCD116"/><rect y="30" width="90" height="15" fill="#003893"/><rect y="45" width="90" height="15" fill="#CE1126"/>';
+    } else if (f.t === "es") {
+      s = '<rect width="90" height="60" fill="#AA151B"/><rect y="15" width="90" height="30" fill="#F1BF00"/>';
+    } else if (f.t === "cz") {
+      s = '<rect width="90" height="30" fill="#fff"/><rect y="30" width="90" height="30" fill="#D7141A"/><path d="M0 0 L45 30 L0 60Z" fill="#11457E"/>';
+    } else if (f.t === "gr") {
+      for (var g = 0; g < 9; g++) s += '<rect y="' + (g * 60 / 9) + '" width="90" height="' + (60 / 9 + 0.3) + '" fill="' + (g % 2 ? "#fff" : "#0D5EAF") + '"/>';
+      s += '<rect width="33.4" height="33.4" fill="#0D5EAF"/><rect x="13.35" width="6.7" height="33.4" fill="#fff"/><rect y="13.35" width="33.4" height="6.7" fill="#fff"/>';
+    } else if (f.t === "tr") {
+      s = '<rect width="90" height="60" fill="#E30A17"/><circle cx="33" cy="30" r="15" fill="#fff"/><circle cx="37" cy="30" r="12" fill="#E30A17"/><polygon points="44.5,30.0 49.6,28.2 49.7,22.9 52.9,27.1 58.1,25.6 55.0,30.0 58.1,34.4 52.9,32.9 49.7,37.1 49.6,31.8" fill="#fff"/>';
+    } else if (f.t === "gb") {
+      s = '<rect width="90" height="60" fill="#012169"/><path d="M0 0L90 60M90 0L0 60" stroke="#fff" stroke-width="12"/><path d="M0 0L90 60M90 0L0 60" stroke="#C8102E" stroke-width="4"/>' +
+        '<path d="M45 0V60M0 30H90" stroke="#fff" stroke-width="18"/><path d="M45 0V60M0 30H90" stroke="#C8102E" stroke-width="10"/>';
     } else if (f.t === "disc") {
       s = '<rect width="90" height="60" fill="' + f.bg + '"/><circle cx="' + (f.cx * 0.9) + '" cy="30" r="18" fill="' + f.fg + '"/>';
     } else if (f.t === "nordic") {
