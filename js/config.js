@@ -25,9 +25,12 @@ window.SITE_CONFIG = {
     ]
   },
 
-  couleurs: {                     // copiées dans les variables CSS
-    bleu: "#2457d6", "bleu-f": "#1a3fa3", jaune: "#ffd23f",
-    rouge: "#e5484d", vert: "#2fb36d", orange: "#ff8a3d", violet: "#6c4ad8"
+  couleurs: {                     // copiées dans les variables CSS (--primaire, --noir...) : palette rouge et noir
+    primaire: "#c8102e",          // rouge : en-tête, boutons (texte blanc : contraste 5,9:1)
+    "primaire-f": "#8f0a1f",      // rouge foncé : ombres, liens
+    noir: "#111111",              // noir : boutons d'action, compteur d'étoiles
+    or: "#ffd23f",                // or : étoiles et contour de focus
+    rouge: "#b00d24", vert: "#1c7a47"
   },
 
   // Univers : un fichier de questions par univers dans data/ (même id).

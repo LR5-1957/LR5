@@ -39,7 +39,7 @@
     function end() {
       var gain = 3 + (coups <= n + 4 ? 2 : 0);
       A.bump("memory"); A.addStars(gain); A.checkBadges();
-      app.querySelector("#fin").innerHTML = '<div class="feedback ok"><h3>Bravo, toutes les paires en ' + coups + " coups ! +" + gain + ' ⭐</h3><button class="btn jaune" id="again">🔁 Rejouer</button></div>';
+      app.querySelector("#fin").innerHTML = '<div class="feedback ok"><h3>Bravo, toutes les paires en ' + coups + " coups ! +" + gain + ' ⭐</h3><button class="btn accent" id="again">🔁 Rejouer</button></div>';
       app.querySelector("#again").addEventListener("click", start); app.querySelector("#again").focus();
     }
   }

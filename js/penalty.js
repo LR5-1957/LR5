@@ -35,13 +35,13 @@
           var fb = pz.querySelector(".fb");
           if (ok) {
             fb.innerHTML = '<div class="feedback ok"><h3>Bonne réponse ! À toi de tirer : choisis ton coin 👇</h3><p class="savais"><b>Le savais-tu ?</b> ' + A.esc(qs[tir].savais_tu) + "</p>" +
-              '<div class="aim">' + DIRS.map(function (d) { return '<button class="btn jaune" data-d="' + d[0] + '">' + d[1] + "</button>"; }).join("") + "</div></div>";
+              '<div class="aim">' + DIRS.map(function (d) { return '<button class="btn accent" data-d="' + d[0] + '">' + d[1] + "</button>"; }).join("") + "</div></div>";
             fb.querySelectorAll("[data-d]").forEach(function (b) { b.addEventListener("click", function () { shoot(b.dataset.d); }); });
             fb.querySelector("[data-d]").focus();
           } else {
             ball.className = "ball miss"; setTimeout(function () { show("Raté… 😬"); }, 450);
             fb.innerHTML = '<div class="feedback ko"><h3>Mauvaise réponse : ton tir passe au-dessus ! La bonne réponse : ' + A.esc(qs[tir].choix[qs[tir].bonne_reponse]) + '</h3><p class="savais"><b>Le savais-tu ?</b> ' + A.esc(qs[tir].savais_tu) + "</p>" +
-              '<button class="btn jaune" id="nx">' + (tir + 1 < nbTirs ? "Tir suivant →" : "Résultat →") + "</button></div>";
+              '<button class="btn accent" id="nx">' + (tir + 1 < nbTirs ? "Tir suivant →" : "Résultat →") + "</button></div>";
             res[tir] = false; serie = 0; shotsBar();
             pz.querySelector("#nx").addEventListener("click", next); pz.querySelector("#nx").focus();
           }
@@ -62,7 +62,7 @@
         shotsBar();
         var fb = pz.querySelector(".fb");
         fb.innerHTML = '<div class="feedback ' + (but ? "ok" : "ko") + '"><h3>' + (but ? "But ! Le gardien a plongé du mauvais côté." : "Le gardien a deviné ton coin !") + "</h3>" +
-          '<button class="btn jaune" id="nx">' + (tir + 1 < nbTirs ? "Tir suivant →" : "Résultat →") + "</button></div>";
+          '<button class="btn accent" id="nx">' + (tir + 1 < nbTirs ? "Tir suivant →" : "Résultat →") + "</button></div>";
         pz.querySelector("#nx").addEventListener("click", next); pz.querySelector("#nx").focus();
       }, 600);
     }
@@ -75,7 +75,7 @@
       show(buts + " / " + nbTirs);
       pz.innerHTML = '<div class="result"><h2>' + (parfait ? "Tireur d'élite : 5 sur 5 ! 🏆" : buts >= 3 ? "Belle séance !" : "Le gardien était en forme… revanche ?") + "</h2>" +
         "<p>Tu as marqué <b>" + buts + "</b> but(s) et gagné <b>" + gain + " ⭐</b>.</p>" +
-        '<div class="row" style="justify-content:center"><button class="btn jaune" id="again">🔁 Nouvelle séance</button><a class="btn blanc" href="#/">Accueil</a></div></div>';
+        '<div class="row" style="justify-content:center"><button class="btn accent" id="again">🔁 Nouvelle séance</button><a class="btn blanc" href="#/">Accueil</a></div></div>';
       pz.querySelector("#again").addEventListener("click", start); pz.querySelector("#again").focus();
     }
     question();

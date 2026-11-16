@@ -100,7 +100,7 @@
         } else {
           fb.innerHTML = '<div class="feedback ' + (ok ? "ok" : "ko") + '"><h3>' + (ok ? "Bravo ! ⭐" : "Raté ! La bonne réponse : " + esc(q.choix[q.bonne_reponse])) +
             '</h3><p class="savais"><b>Le savais-tu ?</b> ' + esc(q.savais_tu) + "</p>" +
-            (opts.nextLabel ? '<button class="btn jaune next">' + esc(opts.nextLabel) + " →</button>" : "") + "</div>";
+            (opts.nextLabel ? '<button class="btn accent next">' + esc(opts.nextLabel) + " →</button>" : "") + "</div>";
           var nb = fb.querySelector(".next");
           if (nb) { nb.addEventListener("click", function () { opts.onNext && opts.onNext(ok); }); nb.focus(); }
         }
@@ -177,7 +177,7 @@
       checkBadges();
       var msg = parfait ? "INCROYABLE, sans faute !" : score >= qs.length * 0.7 ? "Très fort !" : score >= qs.length * 0.4 ? "Bien joué, continue !" : "Chaque erreur t'apprend quelque chose !";
       app.innerHTML = '<div class="panel result">' + mascot(140) + '<h1 tabindex="-1">' + msg + '</h1><p class="big">' + score + "/" + qs.length + "</p><p>Tu gagnes <b>" + (score + bonus) + " ⭐</b>" + (bonus ? " (dont " + bonus + " de bonus sans faute)" : "") + ".</p>" +
-        '<div class="row" style="justify-content:center"><a class="btn jaune" href="#/quiz/' + uid + "/rapide/" + niv + '" id="again">🔁 Rejouer</a><a class="btn blanc" href="#/univers/' + uid + '">Changer de jeu</a><a class="btn blanc" href="#/">Accueil</a></div></div>';
+        '<div class="row" style="justify-content:center"><a class="btn accent" href="#/quiz/' + uid + "/rapide/" + niv + '" id="again">🔁 Rejouer</a><a class="btn blanc" href="#/univers/' + uid + '">Changer de jeu</a><a class="btn blanc" href="#/">Accueil</a></div></div>';
       app.querySelector("#again").addEventListener("click", function (e) { e.preventDefault(); routes.quiz(uid, "rapide", niv); });
     }
     step();
@@ -212,7 +212,7 @@
       setMax("chrono", score); checkBadges();
       app.innerHTML = '<div class="panel result">' + mascot(120) + '<h1 tabindex="-1">Temps écoulé !</h1><p class="big">' + score + " ⭐</p><p>" + (record ? "🏆 Nouveau record !" : "Ton record : " + state.stats.chrono + " bonnes réponses.") + "</p>" +
         (rates.length ? '<div class="recap"><h2>Les réponses à retenir</h2><ul>' + rates.map(function (r) { return "<li><b>" + esc(r.question) + "</b><br>→ " + esc(r.choix[r.bonne_reponse]) + ". <i>" + esc(r.savais_tu) + "</i></li>"; }).join("") + "</ul></div>" : "") +
-        '<div class="row" style="justify-content:center"><button class="btn jaune" id="again">🔁 Rejouer</button><a class="btn blanc" href="#/univers/' + u.id + '">Changer de jeu</a><a class="btn blanc" href="#/">Accueil</a></div></div>';
+        '<div class="row" style="justify-content:center"><button class="btn accent" id="again">🔁 Rejouer</button><a class="btn blanc" href="#/univers/' + u.id + '">Changer de jeu</a><a class="btn blanc" href="#/">Accueil</a></div></div>';
       app.querySelector("#again").addEventListener("click", function () { chrono(u, niv); });
       app.querySelector("h1").focus();
     }
@@ -272,6 +272,7 @@
   function applyBranding() {
     var root = document.documentElement.style;
     Object.keys(CFG.couleurs).forEach(function (k) { root.setProperty("--" + k, CFG.couleurs[k]); });
+    var tc = document.querySelector('meta[name="theme-color"]'); if (tc && CFG.couleurs.primaire) tc.content = CFG.couleurs.primaire;
     document.querySelectorAll("[data-cfg]").forEach(function (n) { var v = CFG[n.dataset.cfg]; if (v != null) n.textContent = v; });
     document.querySelectorAll("[data-mascotte]").forEach(function (n) { n.src = CFG.mascotte.image; n.alt = CFG.mascotte.nom; });
   }
