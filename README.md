@@ -70,44 +70,6 @@ Tout ce qui est propre au site est dans `js/config.js`, `assets/` et `data/`. Po
 Double-clique sur `index.html`, le site marche même sans serveur. Ou, dans le dossier :
 `python3 -m http.server 8000`, puis ouvre http://localhost:8000
 
-## Mettre en ligne avec GitHub + Vercel (gratuit)
-
-### 1. Mettre le code sur GitHub
-1. Crée un compte sur https://github.com, puis un nouveau dépôt : bouton **New**, nom `lr5`, *Private* ou *Public*, sans README.
-2. Ensuite, deux façons de faire :
-   - **Sans ligne de commande** : sur la page du dépôt, clique **uploading an existing file**, puis glisse **le contenu** du dossier (index.html, js/, data/…), pas le dossier lui-même. Termine avec **Commit changes**.
-   - **En ligne de commande** (le dossier est déjà un dépôt git avec un premier commit) :
-     ```
-     cd lr5
-     git remote add origin https://github.com/TON-NOM/lr5.git
-     git branch -M main
-     git push -u origin main
-     ```
-
-### 2. Déployer sur Vercel
-1. Va sur https://vercel.com et clique **Sign up → Continue with GitHub**.
-2. Clique **Add New… → Project**, puis **Import** à côté du dépôt `lr5`.
-3. Framework Preset : **Other**. Ne mets rien comme Build Command ni Output Directory, puis clique **Deploy**.
-4. Après quelques secondes, le site est en ligne sur une adresse du type `lr5-xxxx.vercel.app`.
-5. Ensuite, **chaque modification envoyée sur GitHub met le site à jour automatiquement**.
-
-### 3. Brancher le domaine lr5.ch
-1. Dans Vercel : ouvre le projet → **Settings → Domains**, ajoute `lr5.ch` puis `www.lr5.ch`. Choisis de rediriger `www.lr5.ch` vers `lr5.ch`.
-2. Vercel affiche les enregistrements DNS à créer. **Recopie exactement ceux qu'il affiche**. En général, ce sont :
-   | Type  | Nom (hôte) | Valeur |
-   |-------|------------|--------|
-   | A     | `@` (vide, ou lr5.ch) | `76.76.21.21` |
-   | CNAME | `www`      | `cname.vercel-dns.com` |
-3. Chez ton registraire (Infomaniak) : **Manager → Domaines → lr5.ch → Zone DNS**.
-   - Supprime ou modifie les anciens enregistrements **A** et **AAAA** sur `@`, et l'ancien enregistrement sur `www`, qui pointent vers Infomaniak.
-   - Ajoute ceux de Vercel.
-   - **Ne touche pas** aux enregistrements **MX** et **TXT** (SPF) : ce sont eux qui feront marcher les adresses e-mail @lr5.ch.
-4. Attends de quelques minutes à quelques heures. Vercel affiche « Valid Configuration » et crée tout seul le certificat HTTPS.
-
-## Variante sans Vercel : FTP chez Infomaniak
-
-Si lr5.ch a un **hébergement web** chez Infomaniak (pas seulement le nom de domaine), tu peux déposer **le contenu** du dossier dans le répertoire du site (souvent `web/`), par FTP ou avec le gestionnaire de fichiers d'Infomaniak. Il faudra le redéposer à chaque modification.
-Le fichier `vercel.json` ne sert qu'à Vercel. Sur un autre hébergement, il est simplement ignoré.
 
 ## Vie privée
 
