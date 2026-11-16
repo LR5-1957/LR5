@@ -1,0 +1,114 @@
+# LR5.ch · La ligue des curieux
+
+Site de quiz et de mini-jeux pour les **9-10 ans** (créé pour Lorenzo) : Football, Géographie, Étoiles & espace.
+C'est un **site statique** : de simples fichiers HTML, CSS et JavaScript. Pas de base de données, pas de serveur, pas d'installation, pas d'étape de « build ».
+
+## Ce qu'il y a dedans
+
+- **3 univers et un « Grand mélange »** : 358 questions en tout (104 sur le foot, 129 en géographie, 125 sur l'espace)
+- **3 niveaux** : Découverte (facile pour 9 ans), Explorateur (moyen), Expert (un vrai défi pour un curieux de 10 ans)
+- **Quiz rapide** (10 questions), **Défi chrono** (60 secondes) et **Question du jour** (la même pour tout le monde, chaque jour)
+- **« Le savais-tu ? »** après chaque réponse
+- **Étoiles ⭐, badges et album**
+- **Mini-jeux** : L'épreuve des 11 mètres (penalties) et le Memory des drapeaux
+- **Espace parents** (`parents.html`) : il explique qu'il n'y a ni compte, ni collecte, ni pub, et que la progression reste sur l'appareil
+
+Les questions et les réponses sont mélangées à chaque partie, et une question ne revient pas pendant la même session tant que le paquet n'est pas épuisé.
+
+## Structure
+
+```
+index.html          page principale (toutes les pages du jeu, navigation par #/...)
+parents.html        espace parents
+js/config.js        ★ LA CONFIGURATION : nom, slogan, couleurs, mascotte, univers, niveaux, badges
+js/app.js           moteur : quiz, chrono, question du jour, étoiles, badges, album
+js/penalty.js       mini-jeu des penalties
+js/memory.js        mini-jeu memory des drapeaux
+js/flags.js         drapeaux dessinés en SVG (sans aucune image externe)
+data/football.js    questions du foot
+data/geographie.js  questions de géographie
+data/espace.js      questions sur l'espace
+css/style.css       style
+assets/mascotte.svg mascotte (Lino le lynx, maillot n°5)
+assets/favicon.svg  icône d'onglet
+tools/valider-questions.js   vérifie les questions
+vercel.json         en-têtes de sécurité (bloque tout script ou contenu externe)
+```
+
+## Ajouter ou corriger une question
+
+1. Ouvre le fichier de l'univers, par exemple `data/espace.js`.
+2. Copie une ligne `{ "id": ..., ... },` et colle-la à la fin de la liste, avant `];`.
+3. Change :
+   - `id` : un identifiant **unique**, par exemple `"esp-126"`
+   - `theme` : la petite étiquette affichée, par exemple `"Planètes"`
+   - `difficulte` : `1` (facile), `2` (moyen) ou `3` (difficile)
+   - `question`, puis `choix` : **exactement 4** réponses
+   - `bonne_reponse` : la position de la bonne réponse dans `choix`, **en comptant à partir de 0** (0 = la 1re, 1 = la 2e, 2 = la 3e, 3 = la 4e)
+   - `savais_tu` : l'anecdote affichée après la réponse
+   - `drapeau` (facultatif) : le code d'un pays de `js/flags.js` (`"ch"`, `"fr"`, `"jp"`…), pour afficher un drapeau
+4. Vérifie avec Node.js (si tu l'as) : `node tools/valider-questions.js`. Il contrôle les 4 choix, la bonne réponse, les identifiants en double, etc.
+
+Ce n'est pas grave si la bonne réponse est toujours la première de la liste : les réponses sont mélangées à l'affichage.
+Écris seulement des faits stables et vérifiés. Évite les choses qui changent, comme l'équipe actuelle d'un joueur ou les derniers résultats.
+
+## Ajouter un univers
+
+1. Crée `data/animaux.js` sur le modèle des autres, avec `window.QUIZ_QUESTIONS.animaux = [ ... ];`.
+2. Ajoute une ligne dans `univers` dans `js/config.js` : `{ id: "animaux", nom: "Animaux", emoji: "🦊", description: "...", fichier: "data/animaux.js" }`.
+3. Ajoute une couleur de carte dans `css/style.css` : `.u-animaux{background:linear-gradient(135deg,#xxxxxx,#yyyyyy)}`.
+
+## Créer le site frère (ar7.ch pour Alessandro)
+
+Tout ce qui est propre au site est dans `js/config.js`, `assets/` et `data/`. Pour ar7.ch :
+1. Copie tout le dossier dans un nouveau dépôt `ar7`.
+2. Dans `js/config.js`, change `nom`, `domaine`, `slogan`, `public`, **`stockage`** (par exemple `"ar7:v1"`, pour que les deux sites ne mélangent pas leurs étoiles), `mascotte`, `couleurs` et les niveaux. Pour un enfant de 7 ans, on peut aussi baisser `quiz.nbQuestions` et monter `quiz.chronoSecondes`.
+3. Remplace `assets/mascotte.svg` et adapte les questions dans `data/` (des phrases plus courtes et du vocabulaire simple pour 7 ans).
+
+## Tester sur ton ordinateur
+
+Double-clique sur `index.html`, le site marche même sans serveur. Ou, dans le dossier :
+`python3 -m http.server 8000`, puis ouvre http://localhost:8000
+
+## Mettre en ligne avec GitHub + Vercel (gratuit)
+
+### 1. Mettre le code sur GitHub
+1. Crée un compte sur https://github.com, puis un nouveau dépôt : bouton **New**, nom `lr5`, *Private* ou *Public*, sans README.
+2. Ensuite, deux façons de faire :
+   - **Sans ligne de commande** : sur la page du dépôt, clique **uploading an existing file**, puis glisse **le contenu** du dossier (index.html, js/, data/…), pas le dossier lui-même. Termine avec **Commit changes**.
+   - **En ligne de commande** (le dossier est déjà un dépôt git avec un premier commit) :
+     ```
+     cd lr5
+     git remote add origin https://github.com/TON-NOM/lr5.git
+     git branch -M main
+     git push -u origin main
+     ```
+
+### 2. Déployer sur Vercel
+1. Va sur https://vercel.com et clique **Sign up → Continue with GitHub**.
+2. Clique **Add New… → Project**, puis **Import** à côté du dépôt `lr5`.
+3. Framework Preset : **Other**. Ne mets rien comme Build Command ni Output Directory, puis clique **Deploy**.
+4. Après quelques secondes, le site est en ligne sur une adresse du type `lr5-xxxx.vercel.app`.
+5. Ensuite, **chaque modification envoyée sur GitHub met le site à jour automatiquement**.
+
+### 3. Brancher le domaine lr5.ch
+1. Dans Vercel : ouvre le projet → **Settings → Domains**, ajoute `lr5.ch` puis `www.lr5.ch`. Choisis de rediriger `www.lr5.ch` vers `lr5.ch`.
+2. Vercel affiche les enregistrements DNS à créer. **Recopie exactement ceux qu'il affiche**. En général, ce sont :
+   | Type  | Nom (hôte) | Valeur |
+   |-------|------------|--------|
+   | A     | `@` (vide, ou lr5.ch) | `76.76.21.21` |
+   | CNAME | `www`      | `cname.vercel-dns.com` |
+3. Chez ton registraire (Infomaniak) : **Manager → Domaines → lr5.ch → Zone DNS**.
+   - Supprime ou modifie les anciens enregistrements **A** et **AAAA** sur `@`, et l'ancien enregistrement sur `www`, qui pointent vers Infomaniak.
+   - Ajoute ceux de Vercel.
+   - **Ne touche pas** aux enregistrements **MX** et **TXT** (SPF) : ce sont eux qui feront marcher les adresses e-mail @lr5.ch.
+4. Attends de quelques minutes à quelques heures. Vercel affiche « Valid Configuration » et crée tout seul le certificat HTTPS.
+
+## Variante sans Vercel : FTP chez Infomaniak
+
+Si lr5.ch a un **hébergement web** chez Infomaniak (pas seulement le nom de domaine), tu peux déposer **le contenu** du dossier dans le répertoire du site (souvent `web/`), par FTP ou avec le gestionnaire de fichiers d'Infomaniak. Il faudra le redéposer à chaque modification.
+Le fichier `vercel.json` ne sert qu'à Vercel. Sur un autre hébergement, il est simplement ignoré.
+
+## Vie privée
+
+Il n'y a aucun traceur, aucune statistique, aucune police ni aucun script externe, et aucun cookie. La progression (étoiles, badges) est gardée dans le `localStorage` du navigateur, sur l'appareil seulement. `vercel.json` ajoute une politique de sécurité (CSP) qui interdit de charger quoi que ce soit hors du site.
