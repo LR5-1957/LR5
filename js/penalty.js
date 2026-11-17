@@ -39,22 +39,25 @@
     var pitch = app.querySelector("#pitch"), pwrap = app.querySelector("#pwrap"), zones = app.querySelector("#zones");
     var ball = app.querySelector("#ball"), keeper = app.querySelector("#keeper"), banner = app.querySelector("#banner"), pres = app.querySelector("#pres");
 
-    zones.querySelectorAll(".zone").forEach(function (b) { b.addEventListener("click", function () { if (phase === "viser") aim(b.dataset.d); }); });
+    zones.querySelectorAll(".zone").forEach(function (b) { b.addEventListener("click", function (e) { if (phase === "viser" && !A.bloque(e)) aim(b.dataset.d); }); });
 
-    /* Le terrain prend la plus grande taille possible (rapport 16/10) dans la place restante. */
+    /* Le terrain prend la plus grande taille possible dans la place restante.
+     * Paysage : rapport largeur/hauteur entre 1,15 et 1,6. Portrait (commandes sous le terrain) : le terrain peut
+     * être plus haut que large (jusqu’à 0,7) pour remplir l’écran ; la scène (tribune + but) garde ses proportions
+     * en haut et la place en plus devient de la pelouse devant le but, où attend le ballon. */
     function layout() {
       if (phase === "question" || phase === "fin") return;
       A.majEcran();
       pitch.style.width = pitch.style.height = ""; pwrap.style.flex = ""; pwrap.style.height = "";
       var w = pwrap.clientWidth, h = pwrap.clientHeight;
       if (!w || !h) return;
-      // Rapport largeur/hauteur entre 1,15 (portrait : terrain plus haut) et 1,6 (paysage).
-      var ratio = Math.max(1.15, Math.min(1.6, w / h));
+      var colonne = getComputedStyle(stage).flexDirection === "column";
+      var ratio = Math.max(colonne ? 0.7 : 1.15, Math.min(1.6, w / h));
       var pw = Math.min(w, h * ratio), ph = Math.min(h, pw / ratio);
       pitch.style.width = Math.floor(pw) + "px"; pitch.style.height = Math.floor(ph) + "px";
+      pitch.style.setProperty("--sh", Math.floor(Math.min(ph, pw / 1.15)) + "px");
       pitch.style.fontSize = Math.max(11, Math.min(26, pw / 26)) + "px";
-      // En colonne (portrait), le terrain et les commandes sont regroupés au milieu de l’écran.
-      if (getComputedStyle(stage).flexDirection === "column") { pwrap.style.flex = "0 0 auto"; pwrap.style.height = Math.floor(ph) + "px"; }
+      if (colonne) { pwrap.style.flex = "0 0 auto"; pwrap.style.height = Math.floor(ph) + "px"; }
     }
     A.onResize(layout);
 
@@ -90,11 +93,11 @@
       A.fige(true); layout();
     }
     function viser() {
-      phase = "viser"; reset(); ouvrirTerrain();
+      phase = "viser"; reset(); ouvrirTerrain(); A.garde(); // un double tap sur « À toi de tirer » ne vise pas tout seul
       pitch.classList.add("aiming"); zonesActives(true);
       ctrl.innerHTML = '<p class="ctrl-t">🎯 Touche un coin du but pour viser !</p><div class="aim">' +
         DIRS.map(function (d) { return '<button type="button" class="btn accent" data-d="' + d[0] + '"><span aria-hidden="true">' + d[1] + '</span> <span class="lbl-d">' + d[2] + "</span></button>"; }).join("") + "</div>";
-      ctrl.querySelectorAll("[data-d]").forEach(function (b) { b.addEventListener("click", function () { aim(b.dataset.d); }); });
+      ctrl.querySelectorAll("[data-d]").forEach(function (b) { b.addEventListener("click", function (e) { if (!A.bloque(e)) aim(b.dataset.d); }); });
       ctrl.querySelector("[data-d]").focus({ preventScroll: true });
       layout();
     }
@@ -111,8 +114,8 @@
       var t0 = Date.now(), cur = ctrl.querySelector("#curseur");
       function pos() { var t = ((Date.now() - t0) / JAUGE_MS) % 2; return t < 1 ? t : 2 - t; }
       var anim = A.every(function () { cur.style.left = (pos() * 100) + "%"; }, 30);
-      var btn = ctrl.querySelector("#tirer"); btn.focus({ preventScroll: true });
-      btn.addEventListener("click", function () { if (phase !== "jauge") return; var x = pos(); A.stop(anim); cur.style.left = (x * 100) + "%"; shoot(dir, x > 0.36 && x < 0.64); });
+      var btn = ctrl.querySelector("#tirer"); btn.focus({ preventScroll: true }); A.garde();
+      btn.addEventListener("click", function (e) { if (phase !== "jauge" || A.bloque(e)) return; var x = pos(); A.stop(anim); cur.style.left = (x * 100) + "%"; shoot(dir, x > 0.36 && x < 0.64); });
     }
     function shoot(dir, parfait) {
       phase = "tir";
@@ -133,7 +136,8 @@
         pres.innerHTML = but ? "✓ " + (parfait ? "Tir parfait, en plein dans le vert !" : "Le gardien a plongé du mauvais côté.") : "✗ Le gardien a deviné ton coin !" + (parfait ? "" : " Astuce : tire dans le vert.");
         pres.className = "pen-res show " + (but ? "ok" : "ko");
         ctrl.innerHTML = '<p class="ctrl-t">' + (but ? "Bravo ! " : "Pas de chance… ") + buts + " but" + (buts > 1 ? "s" : "") + " sur " + (tir + 1) + " tir" + (tir ? "s" : "") + '.</p><button type="button" class="btn accent tirer" id="nx">' + nextLabel() + "</button>";
-        ctrl.querySelector("#nx").addEventListener("click", next); ctrl.querySelector("#nx").focus({ preventScroll: true });
+        A.garde();
+        ctrl.querySelector("#nx").addEventListener("click", function (e) { if (phase === "resultat" && !A.bloque(e)) { phase = "suite"; next(); } }); ctrl.querySelector("#nx").focus({ preventScroll: true });
         layout();
       }, calme ? 50 : 650);
     }
@@ -148,7 +152,8 @@
       pq.innerHTML = '<div class="result"><h2>' + (parfait ? "Tireur d’élite : " + nbTirs + " sur " + nbTirs + " ! 🏆" : buts >= 3 ? "Belle séance !" : "Le gardien était en forme… revanche ?") + "</h2>" +
         "<p>Tu as marqué <b>" + buts + "</b> but" + (buts > 1 ? "s" : "") + " et gagné <b>" + gain + " ⭐</b>.</p>" +
         '<div class="row center"><button type="button" class="btn accent" id="again">🔁 Nouvelle séance</button><a class="btn blanc" href="#/">Accueil</a></div>' + A.badgesHtml(nouveaux) + "</div>";
-      pq.querySelector("#again").addEventListener("click", function () { A.newView(); window.scrollTo(0, 0); start(); }); pq.querySelector("#again").focus({ preventScroll: true });
+      A.garde(600);
+      pq.querySelector("#again").addEventListener("click", function (e) { if (A.bloque(e)) return; A.newView(); window.scrollTo(0, 0); start(); }); pq.querySelector("#again").focus({ preventScroll: true });
       window.scrollTo(0, 0);
     }
     question();

@@ -1,5 +1,35 @@
 # Journal des changements · lr5.ch
 
+## Version 4 · novembre 2026 : contre-vérification complète
+
+### Jeux
+- **Penalty, téléphone tenu verticalement** : le terrain remplit maintenant l'écran (fini le grand vide au-dessus et en dessous du but). Le but garde ses proportions en haut, le ballon attend sur la pelouse devant, et le message du résultat ne cache plus rien.
+- **Anti « double tap »** : un deuxième tap trop rapide d'un petit doigt ne valide plus par erreur l'écran suivant (réponse à la question suivante, visée ou tir partis tout seuls, résultat du tir sauté, « Rejouer » involontaire). Le clavier n'est pas concerné.
+- **Défi chrono** : le temps est calculé sur l'horloge (plus de dérive), et il se met **en pause** si l'enfant quitte l'onglet ou l'appli (appel, autre appli), puis reprend au retour.
+- **Quiz** : si on tourne l'appareil après avoir répondu, la réponse, l'explication et le bouton suivant se replacent tout seuls à l'écran.
+- **Plus aucune question revue trop tôt en changeant de mode** : une question vue dans le « mélange », un univers ou le penalty compte comme vue partout ; on fait toujours le tour complet avant d'en revoir une (l'historique de la v3 est repris tel quel).
+
+### Questions (505, toutes relues)
+- La **question du jour** ne prend plus que des questions faciles ou moyennes (comme annoncé en v2).
+- Anecdotes « Le savais-tu ? » qui donnaient la réponse d'une autre question, réécrites : Lune (années des missions Apollo), éclipses, Bételgeuse, Ganymède, Budapest (Danube), Zurich (Berne), Brésil (portugais), Mexique (espagnol).
+- Nouvelles « questions sœurs » (jamais dans la même partie) : phases de la Lune / éclipses, Soleil / étoiles, cycle de la Lune, et 4 paires en football et géographie.
+- Fait mis à jour : Saturne a **des centaines** de lunes connues (et plus seulement « des dizaines »).
+- Faits récents revérifiés sur le web : Coupe du monde 2026 (Espagne 1-0 Argentine après prolongation), Ballon d'Or 2026 (Harry Kane), Artemis II (avril 2026, 406 771 km, Jeremy Hansen), 15 Ligues des champions du Real Madrid, 8 Ballons d'Or de Messi.
+- Badge « 5 quiz sans faute » renommé **« Archer du savoir »** (il avait presque le même nom que le badge du penalty, « Tireur d'élite »).
+
+### Affichage et accessibilité
+- Très petits téléphones (iPhone SE 1re génération 320 px, Galaxy Fold plié 280 px) : plus de débordement sur le côté, question + 4 réponses visibles sans défiler.
+- Le texte suit le réglage **« taille du texte » de l'appareil ou du navigateur** (avant, il était fixé en pixels) ; testé avec un texte agrandi de 50 % et un zoom à 200 %.
+- Bouton « ✕ Quitter » du penalty et du memory : contraste corrigé (blanc sur gris clair, peu lisible).
+- Plus de zoom involontaire au double tap sur les boutons (tablettes).
+- Barre de progression de l'album : elle montre maintenant le chemin depuis le rang actuel jusqu'au suivant.
+
+### Parents et technique
+- Question pour adulte (remise à zéro, restauration) plus difficile pour un enfant : par exemple 17 × 8 au lieu de 7 × 8.
+- Service worker : la nouvelle version télécharge toujours les fichiers en ligne (jamais une vieille copie du navigateur) ; version du cache changée, l'ancien cache est supprimé (testé depuis la v2 et la v3, puis hors ligne).
+- En-tête de sécurité : suppression d'une directive obsolète (interest-cohort) qui provoquait un message d'erreur dans la console de Chrome.
+- Tests automatiques étendus : 29 tailles d'écran + 4 rotations en pleine partie (dont 320×568, 412×915, 430×932, Galaxy Fold, iPad mini, iPad Pro 12,9", 2560×1080, 800×600, zoom 200 %, grand texte), Safari (WebKit) sur iPhone et iPad, jeu complet au clavier, axe-core (accessibilité), mise à jour hors ligne.
+
 ## Version 3 · novembre 2026 : tout se voit sur un seul écran
 
 ### Penalty (l'épreuve des 11 mètres)

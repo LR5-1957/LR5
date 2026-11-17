@@ -3,7 +3,7 @@
  * (donc tes modifications sur GitHub arrivent tout de suite) ; sinon on sert la copie gardée.
  * La liste et la version ci-dessous sont remplies par le script de préparation du site.
  * Pas besoin d'y toucher quand on corrige une question : la version en ligne passe toujours en premier. */
-var VERSION = "lr5-17c287ecef";
+var VERSION = "lr5-194a098c33";
 var CACHE = "quiz-" + VERSION;
 var FICHIERS = [
   "./",
@@ -31,7 +31,8 @@ var FICHIERS = [
 ];
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FICHIERS); }).then(function () { return self.skipWaiting(); }));
+  // « reload » : on télécharge la version en ligne, jamais une vieille copie du cache du navigateur.
+  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FICHIERS.map(function (f) { return new Request(f, { cache: "reload" }); })); }).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (ks) {

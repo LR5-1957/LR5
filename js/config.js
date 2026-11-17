@@ -41,8 +41,8 @@ window.SITE_CONFIG = {
 
   quiz: { nbQuestions: 10, chronoSecondes: 60, etoilesParBonneReponse: 1, bonusSansFaute: 3, etoilesQuestionDuJour: 3, chronoAlerte: true },
   texteRate: "Pas cette fois !",
-  // Question du jour : la même pour tout le monde, jamais deux fois avant d'avoir fait le tour.
-  jour: { difficultes: [1, 2, 3] },
+  // Question du jour : la même pour tout le monde, facile ou moyenne, jamais deux fois avant d’avoir fait le tour.
+  jour: { difficultes: [1, 2] },
   // Lecture à voix haute (bouton 🔊) avec la voix de l'appareil. Mettre null pour l'enlever.
   lecture: { vitesse: 1 },
 
@@ -80,7 +80,7 @@ window.SITE_CONFIG = {
     { id: "deuxcentcinquante", ico: "🌌", nom: "Galaxie",      desc: "250 bonnes réponses",              stat: "bonnes", seuil: 250 },
     { id: "cinqcents", ico: "🏅", nom: "Encyclopédie vivante", desc: "500 bonnes réponses",              stat: "bonnes", seuil: 500 },
     { id: "parfait",   ico: "🎯", nom: "Sans faute",           desc: "10/10 à un quiz rapide",           stat: "parfaits", seuil: 1 },
-    { id: "parfait5",  ico: "🏹", nom: "Tireur d'élite du savoir", desc: "5 quiz sans faute",            stat: "parfaits", seuil: 5 },
+    { id: "parfait5",  ico: "🏹", nom: "Archer du savoir",         desc: "5 quiz sans faute",            stat: "parfaits", seuil: 5 },
     { id: "chrono",    ico: "⏱️", nom: "Éclair",               desc: "8 bonnes réponses au défi chrono", stat: "chrono", seuil: 8 },
     { id: "chrono15",  ico: "⚡", nom: "Foudre",               desc: "15 bonnes réponses au défi chrono", stat: "chrono", seuil: 15 },
     { id: "jour3",     ico: "📅", nom: "Fidèle",               desc: "3 questions du jour réussies",     stat: "jours", seuil: 3 },

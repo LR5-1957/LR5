@@ -14,8 +14,8 @@
   --crowd-a:#c8102e;
   --crowd-b:#111111;
   --texte:#1a1a1a;
-  --fs:18px;
-  --fs-m:17px;
+  --fs:112.5%;   /* 18 px si le navigateur est réglé sur 16 px ; suit le réglage « taille du texte » de l’appareil */
+  --fs-m:106.25%; /* 17 px */
   --q-fs:1.45rem;
   --q-fs-m:1.25rem;
   --a-fs:1.1rem;

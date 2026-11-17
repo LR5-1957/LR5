@@ -75,7 +75,8 @@
       fin.innerHTML = '<div class="feedback ok"><h2 class="h3">✓ Bravo, toutes les paires en ' + coups + " coups ! +" + gain + " ⭐</h2>" +
         '<div class="row center"><button type="button" class="btn accent" id="again">🔁 Rejouer</button><a class="btn blanc" href="#/">Accueil</a></div>' + A.badgesHtml(nouveaux) + "</div>";
       fin.hidden = false; say("🏆 Partie terminée !", "ok");
-      app.querySelector("#again").addEventListener("click", function () { A.newView(); start(); }); app.querySelector("#again").focus({ preventScroll: true });
+      A.garde(600);
+      app.querySelector("#again").addEventListener("click", function (e) { if (A.bloque(e)) return; A.newView(); start(); }); app.querySelector("#again").focus({ preventScroll: true });
     }
   }
   window.APP_ROUTES = window.APP_ROUTES || {};

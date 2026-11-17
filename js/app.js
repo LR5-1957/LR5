@@ -34,7 +34,18 @@
   function later(fn, ms) { var id = setTimeout(function () { timers = timers.filter(function (t) { return t !== id; }); fn(); }, ms); timers.push(id); return id; }
   function every(fn, ms) { var id = setInterval(fn, ms); timers.push(id); return id; }
   function stop(id) { clearTimeout(id); clearInterval(id); timers = timers.filter(function (t) { return t !== id; }); }
-  function newView() { timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); timers = []; resizers = []; fige(false); hideToast(); speakStop(); }
+  var sorties = []; // fonctions de nettoyage de la page affichée (écouteurs…)
+  function enSortant(fn) { sorties.push(fn); }
+  function newView() {
+    timers.forEach(function (t) { clearTimeout(t); clearInterval(t); }); timers = []; resizers = [];
+    var s = sorties; sorties = []; s.forEach(function (f) { try { f(); } catch (e) { } });
+    fige(false); hideToast(); speakStop();
+  }
+  /* Anti « double tap » : un 2e tap trop rapide d'un petit doigt ne doit pas valider le bouton de l'écran suivant
+   * qui vient d'apparaître au même endroit. Seuls les vrais clics souris/doigt sont filtrés (pas le clavier). */
+  var gardeJusqua = 0;
+  function garde(ms) { gardeJusqua = Date.now() + (ms || 300); }
+  function bloque(e) { return !!(e && e.isTrusted && e.detail > 0 && Date.now() < gardeJusqua); }
 
   /* ---------- Écran : hauteur visible, en-tête, rotation ----------
    * Règle d’or : l’enfant ne doit jamais faire défiler la page pour voir le résultat de son geste
@@ -68,7 +79,7 @@
   function montrer(box) {
     var fb = box.querySelector(".fb"); if (!fb || !fb.firstElementChild) return;
     function zone() {
-      var els = [].slice.call(box.querySelectorAll(".answer.ok,.answer.ko"));
+      var els = [].slice.call(box.querySelectorAll(".answer.ok,.answer.ko")).concat([fb]); // en paysage, l’explication est à côté (et commence plus haut)
       var top = Math.min.apply(null, els.map(function (e) { return e.getBoundingClientRect().top; }));
       return { top: top, bottom: fb.getBoundingClientRect().bottom };
     }
@@ -138,7 +149,7 @@
   function rang() {
     var r = (CFG.rangs || [{ etoiles: 0, nom: "" }]).filter(function (x) { return state.etoiles >= x.etoiles; }).pop();
     var next = (CFG.rangs || []).filter(function (x) { return x.etoiles > state.etoiles; })[0];
-    return { nom: r ? r.nom : "", next: next };
+    return { nom: r ? r.nom : "", bas: r ? r.etoiles : 0, next: next };
   }
 
   /* ---------- Questions ---------- */
@@ -159,24 +170,29 @@
   }
 
   /* ---------- Historique persistant : on fait le tour de TOUTES les questions avant d'en revoir une ----------
-   * Pour chaque univers × niveau, on garde un « paquet » mélangé. On tire dans le paquet ; quand il est vide,
-   * on le remélange en mettant à la fin les questions vues le plus récemment. Gardé dans localStorage. */
+   * Pour chaque univers × niveau (et le mélange), on garde un « paquet » mélangé des questions pas encore vues
+   * dans ce tour. Une question posée n'importe où (univers, mélange, penalty) est retirée de TOUS les paquets :
+   * passer du football au mélange ne fait donc jamais revoir une question avant d'avoir fait le tour.
+   * Un nouveau paquet commence par les questions jamais vues, et finit par les plus récentes. Gardé dans localStorage. */
   var histKey = CFG.stockage + ":historique";
   function loadHist() {
     var h; try { h = JSON.parse(lsGet(histKey) || "null"); } catch (e) { h = null; }
     if (!isObj(h)) h = {};
-    var out = { decks: {}, recent: [] };
+    var out = { decks: {}, recent: [], vu: {} };
     if (isObj(h.decks)) Object.keys(h.decks).forEach(function (k) { if (Array.isArray(h.decks[k])) out.decks[k] = h.decks[k].filter(function (id) { return typeof id === "string"; }); });
     if (Array.isArray(h.recent)) out.recent = h.recent.filter(function (id) { return typeof id === "string"; }).slice(-120);
+    if (isObj(h.vu)) Object.keys(h.vu).forEach(function (id) { if (id.length < 40) out.vu[id] = 1; });
+    out.recent.forEach(function (id) { out.vu[id] = 1; }); // historique v2/v3 : les récentes sont déjà vues
     return out;
   }
   var HIST = loadHist();
   function saveHist() { lsSet(histKey, JSON.stringify(HIST)); }
   function refill(pool) {
     var rec = HIST.recent, ids = shuffle(pool.map(function (q) { return q.id; }));
-    var vieux = ids.filter(function (id) { return rec.indexOf(id) < 0; });
-    var recents = ids.filter(function (id) { return rec.indexOf(id) >= 0; }).sort(function (a, b) { return rec.lastIndexOf(a) - rec.lastIndexOf(b); });
-    return vieux.concat(recents); // les plus récentes à la toute fin du nouveau tour
+    var jamais = ids.filter(function (id) { return !HIST.vu[id]; });
+    var vieux = ids.filter(function (id) { return HIST.vu[id] && rec.indexOf(id) < 0; });
+    var recents = ids.filter(function (id) { return HIST.vu[id] && rec.indexOf(id) >= 0; }).sort(function (a, b) { return rec.lastIndexOf(a) - rec.lastIndexOf(b); });
+    return jamais.concat(vieux, recents); // jamais vues d'abord, les plus récentes à la toute fin
   }
   /* Tire UNE question pas encore vue dans ce tour, en évitant les ids et « groupes » déjà présents dans la partie. */
   function nextQuestion(uid, niv, partie) {
@@ -192,11 +208,15 @@
       for (var i = 0; i < deck.length; i++) {
         if (!libre(deck[i])) continue;
         if (idx < 0) idx = i;
-        if (recentCourt.indexOf(deck[i]) < 0) { idx = i; break; } // évite aussi ce qui vient d’être vu dans un autre univers/niveau
+        if (recentCourt.indexOf(deck[i]) < 0) { idx = i; break; } // évite aussi ce qui vient d’être vu ailleurs
       }
       if (idx >= 0) {
         var q = BYID[deck.splice(idx, 1)[0]];
-        HIST.decks[key] = deck; HIST.recent.push(q.id); HIST.recent = HIST.recent.slice(-120); saveHist();
+        HIST.decks[key] = deck;
+        Object.keys(HIST.decks).forEach(function (k) { // vue ici = vue dans tous les autres paquets
+          if (k !== key) { var j = HIST.decks[k].indexOf(q.id); if (j >= 0) HIST.decks[k].splice(j, 1); }
+        });
+        HIST.vu[q.id] = 1; HIST.recent.push(q.id); HIST.recent = HIST.recent.slice(-120); saveHist();
         partie.ids[q.id] = true; if (q.groupe) partie.groupes[q.groupe] = true;
         return q;
       }
@@ -250,6 +270,7 @@
     var order = shuffle([0, 1, 2, 3], opts.rnd);
     var u = universe(q.u);
     var flag = q.drapeau && window.QUIZ_FLAGS ? window.QUIZ_FLAGS.svg(q.drapeau, "Drapeau mystère") : "";
+    garde();
     box.classList.add("qz"); box.classList.remove("done", "compact"); box.classList.toggle("has-flag", !!flag); box.setAttribute("data-q", q.id);
     box.innerHTML =
       '<div class="qhead"><span class="tag">' + u.emoji + " " + esc(q.theme) + '</span><span class="row tight">' + speakBtn("Écouter la question") + '<span class="tag">' + esc(niveauLabel(q.difficulte)) + "</span></span></div>" +
@@ -264,8 +285,8 @@
     });
     var done = false;
     box.querySelectorAll(".answer").forEach(function (b) {
-      b.addEventListener("click", function () {
-        if (done) return; done = true; speakStop();
+      b.addEventListener("click", function (e) {
+        if (done || bloque(e)) return; done = true; speakStop(); garde();
         var i = +b.dataset.i, ok = i === q.bonne_reponse;
         box.querySelectorAll(".answer").forEach(function (x) {
           x.disabled = true;
@@ -284,7 +305,7 @@
             '</h3><p class="savais"><b>Le savais-tu ?</b> ' + esc(q.savais_tu) + "</p>" +
             '<div class="row">' + (lab ? '<button type="button" class="btn accent next">' + esc(lab) + (/[→!]$/.test(lab) ? "" : " →") + "</button>" : "") + speakBtn("Écouter l’explication") + "</div></div>";
           var nb = fb.querySelector(".next");
-          if (nb) { nb.addEventListener("click", function () { opts.onNext && opts.onNext(ok); }); nb.focus({ preventScroll: true }); }
+          if (nb) { nb.addEventListener("click", function (e) { if (bloque(e) || nb.disabled) return; nb.disabled = true; opts.onNext && opts.onNext(ok); }); nb.focus({ preventScroll: true }); }
           var l2 = fb.querySelector(".lire"); if (l2) l2.addEventListener("click", function () { speak((ok ? "Bravo ! " : "La bonne réponse : " + q.choix[q.bonne_reponse] + ". ") + "Le savais-tu ? " + q.savais_tu); });
         }
         opts.onAnswer && opts.onAnswer(ok);
@@ -292,6 +313,14 @@
       });
     });
     var h = box.querySelector("#q-texte"); if (h && opts.focus !== false) h.focus({ preventScroll: true });
+    // Après une rotation de l'écran, on remet la réponse, l'explication et le bouton bien en vue.
+    if (!box.rqSuivi) {
+      box.rqSuivi = true; var larg = window.innerWidth;
+      onResize(function () {
+        if (window.innerWidth === larg) return; larg = window.innerWidth; // pas quand seule la barre d'adresse bouge
+        if (box.isConnected && box.offsetParent && box.classList.contains("done") && !box.querySelector(".quick")) { box.classList.remove("compact"); montrer(box); }
+      });
+    }
   }
   function niveauLabel(d) { return ["", "Facile", "Moyen", "Difficile"][d] || ""; }
 
@@ -378,7 +407,8 @@
         badgesHtml(nouveaux) +
         (rates.length ? '<div class="recap"><h2>À retenir</h2><ul>' + rates.map(function (r) { return "<li><b>" + esc(r.question) + "</b><br>→ " + esc(r.choix[r.bonne_reponse]) + "</li>"; }).join("") + "</ul><p class=\"muted\">Ces questions t’attendent dans « Revoir mes erreurs ».</p></div>" : "") +
         "</div>";
-      app.querySelector("#again").addEventListener("click", function (e) { e.preventDefault(); newView(); window.scrollTo(0, 0); rejouerFn(); });
+      garde(600);
+      app.querySelector("#again").addEventListener("click", function (e) { e.preventDefault(); if (bloque(e)) return; newView(); window.scrollTo(0, 0); rejouerFn(); });
       enHaut(); app.querySelector("h1").focus({ preventScroll: true });
     }
     var rejouerFn = function () { route(); };
@@ -407,11 +437,22 @@
     app.innerHTML = '<div class="panel"><div class="qhead"><span>⏱️ <span class="qt-nom">Défi chrono · ' + esc(u.nom) + '</span></span><span class="row tight"><span id="sc">0 ⭐</span><span class="timer" id="t" role="timer" aria-live="off">' + left + 's</span>' +
       '<a class="pill quitter" href="#/univers/' + u.id + '" aria-label="Quitter le défi">✕ <span>Quitter</span></a></span></div><div id="qbox"></div></div>';
     var tEl = app.querySelector("#t");
-    every(function () {
-      left--; tEl.textContent = left + "s";
-      tEl.classList.toggle("urgent", left <= 10 && CFG.quiz.chronoAlerte !== false);
-      if (left <= 0) end(false);
-    }, 1000);
+    // Le temps est calculé sur l'horloge (pas de dérive) ; il est mis en pause si l'enfant quitte l'onglet ou l'appli.
+    var finA = Date.now() + total * 1000, pauseReste = 0;
+    function tic() {
+      if (fini || pauseReste) return;
+      var l = Math.max(0, Math.ceil((finA - Date.now()) / 1000));
+      if (l !== left) { left = l; tEl.textContent = left + "s"; tEl.classList.toggle("urgent", left <= 10 && CFG.quiz.chronoAlerte !== false); }
+      if (finA - Date.now() <= 0) end(false);
+    }
+    function visi() {
+      if (fini) return;
+      if (document.hidden) { if (!pauseReste) pauseReste = Math.max(1, finA - Date.now()); }
+      else if (pauseReste) { finA = Date.now() + pauseReste; pauseReste = 0; tic(); }
+    }
+    document.addEventListener("visibilitychange", visi);
+    enSortant(function () { document.removeEventListener("visibilitychange", visi); });
+    every(tic, 200);
     function step() {
       if (fini) return;
       q = nextQuestion(u.id, niv, partie);           // une question à la fois, jamais deux fois la même dans la partie
@@ -434,7 +475,8 @@
         badgesHtml(nouveaux) +
         (rates.length ? '<div class="recap"><h2>Les réponses à retenir</h2><ul>' + rates.map(function (r) { return "<li><b>" + esc(r.question) + "</b><br>→ " + esc(r.choix[r.bonne_reponse]) + ". <i>" + esc(r.savais_tu) + "</i></li>"; }).join("") + "</ul></div>" : "") +
         "</div>";
-      app.querySelector("#again").addEventListener("click", function () { newView(); window.scrollTo(0, 0); chrono(u, niv); });
+      garde(600);
+      app.querySelector("#again").addEventListener("click", function (e) { if (bloque(e)) return; newView(); window.scrollTo(0, 0); chrono(u, niv); });
       enHaut(); app.querySelector("h1").focus({ preventScroll: true });
     }
     step();
@@ -465,7 +507,7 @@
     var s = state.stats, r = rang();
     app.innerHTML = '<h1 tabindex="-1">🏅 Mon album</h1>' +
       '<div class="panel rangbox">' + mascot(90) + '<div><h2 class="h3">' + (r.nom ? "Rang : " + esc(r.nom) : "Mon rang") + "</h2>" +
-      (r.next ? '<p>Encore <b>' + (r.next.etoiles - state.etoiles) + " ⭐</b> pour devenir <b>" + esc(r.next.nom) + '</b>.</p><div class="progress" aria-hidden="true"><i style="width:' + Math.round(state.etoiles / r.next.etoiles * 100) + '%"></i></div>' : "<p>Tu as atteint le plus haut rang ! 🏆</p>") + "</div></div>" +
+      (r.next ? '<p>Encore <b>' + (r.next.etoiles - state.etoiles) + " ⭐</b> pour devenir <b>" + esc(r.next.nom) + '</b>.</p><div class="progress" aria-hidden="true"><i style="width:' + Math.round(Math.max(0, state.etoiles - r.bas) / Math.max(1, r.next.etoiles - r.bas) * 100) + '%"></i></div>' : "<p>Tu as atteint le plus haut rang ! 🏆</p>") + "</div></div>" +
       '<div class="stats">' +
       [["⭐", state.etoiles, "étoiles"], ["✅", s.bonnes, "bonnes réponses"], ["❓", s.repondues, "questions jouées"], ["⏱️", s.chrono, "record chrono"], ["🥅", s.buts, "buts marqués"], ["📅", s.jours, "questions du jour"]]
         .map(function (x) { return '<div class="stat"><span aria-hidden="true">' + x[0] + "</span><b>" + x[1] + "</b>" + x[2] + "</div>"; }).join("") +
@@ -486,7 +528,7 @@
 
   /* Petite question pour les adultes avant une action importante (remise à zéro, restauration). */
   function parentGate(box, onOk, texte, bouton) {
-    var a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4);
+    var a = 12 + Math.floor(Math.random() * 8), b = 6 + Math.floor(Math.random() * 4); // ex. 17 × 8 : facile pour un adulte, dur pour un enfant
     box.innerHTML = '<div class="panel gate" role="dialog" aria-labelledby="gate-t"><h2 id="gate-t" class="h3">Demande à un adulte 🔒</h2><p>' + (texte || 'Cela efface <b>toutes</b> les étoiles et tous les badges de cet appareil. Une sauvegarde automatique est faite avant (restaurable depuis l’Espace parents).') + '</p>' +
       '<label for="gate-r">Combien font ' + a + " × " + b + ' ?</label> <input id="gate-r" inputmode="numeric" autocomplete="off" size="4"> ' +
       '<div class="row"><button type="button" class="btn" id="gate-ok">' + esc(bouton || "Effacer") + '</button><button type="button" class="btn blanc" id="gate-no">Annuler</button></div><p id="gate-msg" class="muted" aria-live="polite"></p></div>';
@@ -499,7 +541,7 @@
   }
   function resetAll() {
     lsSet(CFG.stockage + ":sauvegarde-auto", JSON.stringify({ date: new Date().toISOString(), etat: state }));
-    state = defaults(); HIST = { decks: {}, recent: [] }; save(); saveHist();
+    state = defaults(); HIST = { decks: {}, recent: [], vu: {} }; save(); saveHist();
   }
 
   /* ---------- Code de sauvegarde (aucun serveur : un simple texte à copier) ---------- */
@@ -567,7 +609,7 @@
     all: function () { return ALL; }, byId: function (id) { return BYID[id]; }, later: later, every: every, stop: stop, newView: newView, speak: speak, canSpeak: function () { return canSpeak; },
     dailyFor: dailyFor, exportCode: exportCode, importCode: importCode, restoreAuto: restoreAuto, sanitize: sanitize, parentGate: parentGate, resetAll: resetAll,
     hist: function () { return HIST; }, loadData: loadData, buildPool: buildPool,
-    onResize: onResize, topH: topH, viewH: viewH, fige: fige, majEcran: majEcran, montrer: montrer };
+    onResize: onResize, enSortant: enSortant, garde: garde, bloque: bloque, topH: topH, viewH: viewH, fige: fige, majEcran: majEcran, montrer: montrer };
 
   protect();
   document.addEventListener("DOMContentLoaded", function () {

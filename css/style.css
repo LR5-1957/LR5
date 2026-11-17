@@ -6,6 +6,7 @@
 }
 html{font-size:var(--fs)}
 *{box-sizing:border-box}
+a,button,input,label{touch-action:manipulation} /* pas de zoom au double tap sur les boutons (tablettes) */
 [hidden]{display:none!important}
 html,body{margin:0}
 body{font-family:"Trebuchet MS","Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--texte);
@@ -48,8 +49,8 @@ h1{font-size:2rem} h2{font-size:1.5rem} .h3{font-size:1.17rem}
 .bulle{background:var(--doux);border-radius:18px;padding:.6rem .9rem;display:inline-block;font-weight:600}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem}
 .grid.g4{grid-template-columns:repeat(4,1fr)}
-@media (max-width:979px){.grid.g4{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:559px){.grid.g4{grid-template-columns:1fr}}
+@media (max-width:61.1875em){.grid.g4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:34.9375em){.grid.g4{grid-template-columns:1fr}}
 .card{background:var(--carte);border-radius:var(--r);padding:1rem;box-shadow:var(--ombre);border:0;text-align:left;font:inherit;color:inherit;text-decoration:none;display:block;cursor:pointer;transition:transform .12s}
 .card:hover{transform:translateY(-3px)}
 .card:active{transform:translateY(2px)}
@@ -148,6 +149,7 @@ h1{font-size:2rem} h2{font-size:1.5rem} .h3{font-size:1.17rem}
 .jeu-bar{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.6rem}
 .jeu-t{font-size:1.45rem;margin:0;flex:1 1 auto;min-width:0}
 .jeu-bar .quitter{margin-left:auto}
+.jeu-bar .pill{background:var(--fonce);color:#fff} .jeu-bar .pill:hover{background:var(--primaire)} /* contraste : la pastille est sur le fond clair */
 .shots{display:flex;gap:.3rem;justify-content:center;margin:0}
 .shots span{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--doux);font-size:1rem}
 
@@ -176,32 +178,34 @@ html.fige .footer{display:none}
   .pen-ctrl{width:clamp(200px,32%,360px)}
   .pen-ctrl .aim{grid-template-columns:1fr}
 }
-.pitch{position:relative;width:100%;max-width:100%;aspect-ratio:16/10;border-radius:20px;overflow:hidden;min-height:150px;font-size:16px;
-  background:linear-gradient(#7fc8ff 0 30%,#3fb56a 30% 100%)}
-.pitch .stripes{position:absolute;inset:30% 0 0 0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 12%,transparent 12% 24%)}
-.pitch .crowd{position:absolute;left:0;right:0;top:0;height:30%;background:radial-gradient(circle,#ffffff55 2px,transparent 3px) 0 0/16px 14px,repeating-linear-gradient(90deg,var(--crowd-a) 0 24px,var(--crowd-b) 24px 48px)}
-.goal{position:absolute;left:18%;right:18%;top:14%;height:38%;border:.45em solid #fff;border-bottom:0;border-radius:4px 4px 0 0;
+/* --sh = hauteur de la « scène » (tribune + but), posée en haut du terrain. En portrait, le terrain est plus haut
+ * que la scène : la place en plus devient de la pelouse devant le but, où attend le ballon (pas de vide à l’écran). */
+.pitch{--sh:100%;position:relative;width:100%;max-width:100%;aspect-ratio:16/10;border-radius:20px;overflow:hidden;min-height:150px;font-size:16px;
+  background:#3fb56a}
+.pitch .stripes{position:absolute;left:0;right:0;bottom:0;top:calc(var(--sh) * .3);background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 12%,transparent 12% 24%)}
+.pitch .crowd{position:absolute;left:0;right:0;top:0;height:calc(var(--sh) * .3);background:radial-gradient(circle,#ffffff55 2px,transparent 3px) 0 0/16px 14px,repeating-linear-gradient(90deg,var(--crowd-a) 0 24px,var(--crowd-b) 24px 48px)}
+.goal{position:absolute;left:18%;right:18%;top:calc(var(--sh) * .14);height:calc(var(--sh) * .38);border:.45em solid #fff;border-bottom:0;border-radius:4px 4px 0 0;
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.35) 0 2px,transparent 2px 12px),repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 2px,transparent 2px 12px),rgba(0,0,0,.08)}
-.line{position:absolute;left:4%;right:4%;top:52%;height:4px;background:#fff}
-.spot{position:absolute;left:50%;top:86%;width:10px;height:6px;background:#fff;border-radius:50%;transform:translate(-50%,-50%)}
-.keeper{position:absolute;left:50%;top:22%;width:15%;height:30%;transform:translateX(-50%);transition:transform .45s cubic-bezier(.2,.8,.3,1);z-index:1}
+.line{position:absolute;left:4%;right:4%;top:calc(var(--sh) * .52);height:4px;background:#fff}
+.spot{position:absolute;left:50%;top:calc(var(--sh) * .86 + (100% - var(--sh)) * .55);width:10px;height:6px;background:#fff;border-radius:50%;transform:translate(-50%,-50%)}
+.keeper{position:absolute;left:50%;top:calc(var(--sh) * .22);width:15%;height:calc(var(--sh) * .3);transform:translateX(-50%);transition:transform .45s cubic-bezier(.2,.8,.3,1);z-index:1}
 .keeper svg{width:100%;height:100%}
 .keeper.left{transform:translateX(-175%) rotate(-55deg)}
 .keeper.right{transform:translateX(75%) rotate(55deg)}
 .keeper.center{transform:translateX(-50%) translateY(-12%)}
-.ball{position:absolute;left:50%;top:82%;width:7%;aspect-ratio:1;transform:translate(-50%,-50%);transition:left .5s ease-out,top .5s ease-out,width .5s;z-index:3}
+.ball{position:absolute;left:50%;top:calc(var(--sh) * .82 + (100% - var(--sh)) * .55);width:7%;aspect-ratio:1;transform:translate(-50%,-50%);transition:left .5s ease-out,top .5s ease-out,width .5s;z-index:3}
 .ball svg{width:100%;height:100%;display:block}
-.ball.shot-left{left:28%;top:34%;width:4.5%}
-.ball.shot-center{left:50%;top:28%;width:4.5%}
-.ball.shot-right{left:72%;top:34%;width:4.5%}
+.ball.shot-left{left:28%;top:calc(var(--sh) * .34);width:4.5%}
+.ball.shot-center{left:50%;top:calc(var(--sh) * .28);width:4.5%}
+.ball.shot-right{left:72%;top:calc(var(--sh) * .34);width:4.5%}
 /* Zones de tir : on touche directement le but pour viser. */
-.zones{position:absolute;left:18%;right:18%;top:14%;height:40%;display:grid;grid-template-columns:repeat(3,1fr);z-index:2}
+.zones{position:absolute;left:18%;right:18%;top:calc(var(--sh) * .14);height:calc(var(--sh) * .4);display:grid;grid-template-columns:repeat(3,1fr);z-index:2}
 .zone{appearance:none;border:0;background:transparent;margin:0;padding:0;cursor:pointer;display:grid;place-items:center;font-size:1.6em;border-radius:10px;opacity:0;pointer-events:none;min-height:44px}
 .pitch.aiming .zone{opacity:1;pointer-events:auto;outline:3px dashed rgba(255,255,255,.9);outline-offset:-6px;background:rgba(255,255,255,.12);animation:vise 1s infinite alternate}
 .pitch.aiming .zone:hover,.pitch.aiming .zone:focus-visible{background:rgba(255,210,63,.45)}
 .zone.cible{opacity:1;background:rgba(255,210,63,.35);outline:3px solid var(--or);outline-offset:-6px}
 @keyframes vise{to{background:rgba(255,255,255,.28)}}
-.banner{position:absolute;left:50%;top:64%;transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;color:var(--fonce);font-weight:900;font-size:1.9em;padding:.2em .7em;border-radius:.5em;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:.25s;z-index:4;white-space:nowrap;pointer-events:none}
+.banner{position:absolute;left:50%;top:calc(var(--sh) * .64);transform:translate(-50%,-50%) scale(.6);opacity:0;background:#fff;color:var(--fonce);font-weight:900;font-size:1.9em;padding:.2em .7em;border-radius:.5em;box-shadow:0 6px 0 rgba(0,0,0,.2);transition:.25s;z-index:4;white-space:nowrap;pointer-events:none}
 .banner.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .banner.ok{box-shadow:0 6px 0 var(--vert)} .banner.ko{box-shadow:0 6px 0 var(--rouge)}
 .pen-res{position:absolute;left:3%;right:3%;bottom:3%;z-index:4;background:rgba(255,255,255,.95);border-radius:.6em;padding:.35em .6em;font-weight:800;font-size:max(13px,.85em);text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
@@ -243,7 +247,7 @@ html.fige .footer{display:none}
 .nf{text-align:center;padding-top:2rem}
 .nf img{width:160px;height:160px}
 
-@media (max-width:640px){
+@media (max-width:40em){
   html{font-size:var(--fs-m)}
   .hero{flex-direction:column;text-align:center}
   .hero .mascotte{width:110px!important}
@@ -259,7 +263,7 @@ html.fige .footer{display:none}
   .rangbox{flex-direction:column;text-align:center}
   .toast{top:68px}
 }
-@media (max-width:430px){
+@media (max-width:26.875em){
   .topbar nav .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .pill{padding:.45rem .7rem}
   .jeu-t{font-size:1.2rem}
@@ -268,7 +272,7 @@ html.fige .footer{display:none}
   .aim .btn{font-size:1.5rem}
 }
 /* Téléphones étroits : en-têtes de question sur une seule ligne, réponses plus compactes */
-@media (max-width:430px){
+@media (max-width:26.875em){
   .qt-nom{display:none}
   .lire>span{display:none}
   .qhead .tag{font-size:.8rem}
@@ -282,21 +286,51 @@ html.fige .footer{display:none}
   .answer{min-height:52px;padding:.5rem .75rem}
 }
 /* Écrans peu hauts (petits téléphones, portables) */
-@media (max-height:760px){
+@media (max-height:47.5em){
   .flag-q{width:min(150px,42%);margin-bottom:.5rem}
   .res-tete .mascotte{width:90px!important}
   .res-tete .big{font-size:2.4rem}
   main{padding-top:.8rem}
   .panel>h1{font-size:1.5rem;margin-bottom:.2rem}
 }
-@media (max-height:700px) and (orientation:portrait){
-  .flag-q{width:min(124px,36%)}
+@media (max-height:43.75em) and (orientation:portrait){
+  .flag-q{width:min(104px,30%)}
+  .question{margin:.25rem 0 .6rem}
   .pen-intro{margin:0 0 .4rem}
+}
+/* Très petits téléphones (iPhone SE 1re génération 320 px, Galaxy Fold plié 280 px).
+ * Les seuils sont en « em » : si l’appareil est réglé en grand texte, le site passe tout seul à la mise en page plus compacte. */
+@media (max-width:22.5em){
+  html{font-size:93.75%}
+  .topbar{gap:.3rem;padding-left:.45rem;padding-right:.45rem}
+  .topbar nav{gap:.25rem}
+  .pill{padding:.4rem .5rem}
+  .logo b{font-size:1.1rem}
+  .logo img{width:34px;height:34px}
+  .qhead .quitter>span,.jeu-bar .quitter>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .qhead .row.tight{gap:.3rem}
+  .pen-intro{display:none}
+  .panel>h1{font-size:1.3rem}
+}
+/* Téléphones peu hauts en portrait : question + 4 réponses toujours visibles sans défiler */
+@media (max-height:40em) and (orientation:portrait),(max-width:18.75em){
+  main{padding-top:.5rem}
+  .question{font-size:1.15rem;margin:.2rem 0 .5rem}
+  .answers{gap:.45rem}
+  .answer{min-height:46px;padding:.4rem .7rem}
+  .answer .k{width:1.7rem;height:1.7rem}
+  .progress{margin-bottom:.4rem}
+  .panel>p.muted{margin:.2rem 0}
+}
+/* Fenêtres d’ordinateur peu hautes (ex. 800×600) : drapeau plus petit pour garder les 4 réponses visibles */
+@media (max-height:40em) and (min-aspect-ratio:6/5){
+  .flag-q{width:auto;height:96px;margin:0 auto .4rem}
+  .question{margin:.25rem 0 .6rem}
 }
 /* ---------- Téléphone couché (paysage, peu de hauteur) ----------
  * En jeu, l’en-tête disparaît (le bouton ✕ Quitter reste) et tout se range sur deux colonnes. */
-@media (orientation:landscape) and (max-height:540px){
-  html{font-size:15px}
+@media (orientation:landscape) and (max-height:33.75em){
+  html{font-size:93.75%}
   .topbar{position:static;min-height:0;padding-top:max(.25rem,env(safe-area-inset-top));padding-bottom:.25rem}
   .topbar .logo img{width:34px;height:34px}
   .pill{min-height:40px;padding:.3rem .7rem}
@@ -346,11 +380,29 @@ html.fige .footer{display:none}
   .pen-intro{display:none}
   .jeu-bar{margin-bottom:.3rem}
 }
-@media (orientation:landscape) and (max-height:340px){
+@media (orientation:landscape) and (max-height:21.25em){
   .aim{grid-template-columns:repeat(3,1fr)!important}
   .aim .lbl-d{display:none}
   .aim .btn{font-size:1.3rem}
   .pen-ctrl{gap:.3rem}
+  /* très peu de hauteur (ex. fenêtre 800×600 zoomée à 200 %) */
+  main{padding-top:.3rem}
+  .panel{padding:.5rem .7rem}
+  .qhead{font-size:.9rem;margin-bottom:.2rem}
+  .progress{height:8px;margin-bottom:.3rem}
+  .question{font-size:1.05rem;margin:.1rem 0 .35rem}
+  .answers{gap:.35rem}
+  .answer{min-height:40px;padding:.3rem .6rem}
+  .feedback{padding:.45rem .6rem}
+  .savais{font-size:.9rem;margin:.15rem 0 .3rem}
+  .feedback .btn{min-height:42px;padding:.35rem .8rem}
+}
+/* Paysage étroit (fenêtre zoomée) : commandes du penalty un peu plus étroites pour laisser la place au terrain */
+@media (orientation:landscape) and (max-width:33em){
+  .pen-ctrl{width:clamp(130px,38%,360px)}
+  .pen-ctrl .btn{padding-left:.4rem;padding-right:.4rem}
+  .pen.tir,.mem{padding-left:max(.4rem,env(safe-area-inset-left));padding-right:max(.4rem,env(safe-area-inset-right))}
+  .pen-stage{gap:.4rem}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
