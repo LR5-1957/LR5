@@ -96,6 +96,15 @@
     return { v: VERSION_ETAT, etoiles: 0, stats: { bonnes: 0, repondues: 0, parfaits: 0, chrono: 0, jours: 0, buts: 0, penaltyParfait: 0, memory: 0, corrigees: 0 },
       badges: {}, niveau: 1, jour: {}, erreurs: [], tenue: "" };
   }
+  /* Accessoires portés : plusieurs à la fois, mais un seul par emplacement (tête, yeux, dos…). */
+  function tenuesValides(ids) {
+    var vus = {}, out = [];
+    (CFG.tenues || []).forEach(function (t) {
+      if (ids.indexOf(t.id) < 0) return;
+      var pl = t.place || t.id; if (vus[pl]) return; vus[pl] = 1; out.push(t);
+    });
+    return out;
+  }
   /* Répare n'importe quelle donnée sauvegardée (ancienne version, abîmée, modifiée à la main). */
   function sanitize(s) {
     var d = defaults();
@@ -108,7 +117,7 @@
       var j = s.jour[k]; d.jour[k] = { ok: !!j.ok, id: typeof j.id === "string" ? j.id : "" }; // on garde les 14 derniers jours
     });
     if (Array.isArray(s.erreurs)) d.erreurs = s.erreurs.filter(function (x) { return typeof x === "string"; }).slice(-80);
-    if (typeof s.tenue === "string" && (CFG.tenues || []).some(function (t) { return t.id === s.tenue; })) d.tenue = s.tenue;
+    if (typeof s.tenue === "string") d.tenue = tenuesValides(s.tenue.split(/\s+/)).map(function (t) { return t.id; }).join(" ");
     return d;
   }
   function loadState() {
@@ -249,16 +258,61 @@
     return { q: q, rnd: seeded(hash(CFG.domaine + key)) };
   }
 
-  /* ---------- Lecture à voix haute (synthèse vocale de l'appareil, rien ne sort) ---------- */
+  /* ---------- Lecture à voix haute (synthèse vocale de l'appareil ou du navigateur) ----------
+   * On choisit la voix FRANÇAISE FÉMININE la plus naturelle disponible : d'abord les voix « Premium /
+   * Enhanced / Natural » connues (Audrey, Aurélie, Marie, Denise…), puis les autres voix féminines,
+   * le français de France avant celui de Suisse, Belgique ou Canada. Les voix masculines ou « gadgets »
+   * ne sont prises qu'en tout dernier recours. Les voix arrivent parfois en retard (événement voiceschanged). */
   var canSpeak = !!(CFG.lecture && window.speechSynthesis && window.SpeechSynthesisUtterance);
+  var VOIX_TOP = /(audrey|aur[eé]lie|marie|virginie|jo[eë]lle|c[eé]line|am[eé]lie|denise|[eé]lo[iï]se|vivienne|julie|hortense|caroline|chantal|sylvie|brigitte|josephine|joséphine|coralie|ariane|charline|camille|cl[eé]mence|google fran[cç]ais)/i;
+  var VOIX_F = /(female|femme|f[eé]minin|flo\b|sandy|shelley|grandma|grand-m[eè]re|x-(fra|frc|vlf)[-#])/i;
+  var VOIX_H = /(thomas|\bdaniel\b|\bhenri\b|\bpaul\b|r[eé]my|claude\b|\bantoine\b|nicolas|jacques|alain|\bjean\b|fabrice|g[eé]rard|guillaume|mathieu|\blouis\b|pierre|\byves\b|eddy|reed\b|rocko|grandpa|grand-p[eè]re|albert|\bfred\b|ralph|junior|\bmale\b|homme|masculin|j[eé]r[oô]me|maxime|vincent|f[eé]lix|olivier|beno[iî]t|\bdenis\b|warren|\bfran[cç]ois\b|\bluc\b|x-(frb|frd)[-#])/i;
+  var VOIX_GADGET = /(bad news|bells|bubbles|boing|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|bahh|hysterical|deranged|novelty)/i;
+  function noteVoix(v) {
+    var lang = String(v.lang || "").replace("_", "-").toLowerCase(), id = (v.name || "") + " " + (v.voiceURI || "");
+    if (lang.indexOf("fr") !== 0) return -1e9;
+    var n = lang === "fr-fr" ? 40 : lang === "fr" ? 36 : lang === "fr-ch" ? 30 : lang === "fr-be" ? 28 : 25; // fr-CA et autres
+    if (VOIX_GADGET.test(id)) n -= 200;
+    if (VOIX_H.test(v.name || "")) n -= 150;
+    else if (VOIX_TOP.test(v.name || "")) n += 40;
+    else if (VOIX_F.test(id)) n += /eloquence|flo\b|sandy|shelley|grandma/i.test(id) ? 12 : 30; // voix « Eloquence » d'Apple : féminines mais plus robotiques
+    if (/premium/i.test(id)) n += 22; else if (/natural|neural/i.test(id)) n += 20; else if (/enhanced|am[eé]lior/i.test(id)) n += 16; else if (/online/i.test(id)) n += 8;
+    if (/compact/i.test(id)) n -= 4;
+    if (/google/i.test(id)) n += 6;
+    if (v["default"]) n += 2;
+    return n;
+  }
+  function choisirVoix(liste) {
+    var best = null, bn = -1e9;
+    (liste || []).forEach(function (v) { var n = noteVoix(v); if (n > bn) { bn = n; best = v; } });
+    return bn > -1e9 ? best : null;
+  }
+  var voixChoisie = null;
+  function majVoix() { try { voixChoisie = choisirVoix(speechSynthesis.getVoices()); } catch (e) { voixChoisie = null; } return voixChoisie; }
+  if (canSpeak) {
+    majVoix();
+    try { if (speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", majVoix); else speechSynthesis.onvoiceschanged = majVoix; } catch (e) { }
+  }
+  /* Phrases courtes : certains navigateurs coupent les longues lectures au bout d'une quinzaine de secondes. */
+  function morceaux(text) {
+    var out = [];
+    String(text).replace(/([.!?…])\s+/g, "$1\n").split("\n").forEach(function (p) {
+      while (p.length > 200) { var i = p.lastIndexOf(", ", 200); if (i < 60) i = p.lastIndexOf(" ", 200); if (i < 1) i = 200; out.push(p.slice(0, i + 1)); p = p.slice(i + 1).trim(); }
+      if (p.trim()) out.push(p);
+    });
+    return out;
+  }
   function speak(text) {
     if (!canSpeak) return;
     try {
       speechSynthesis.cancel();
-      var u = new SpeechSynthesisUtterance(text); u.lang = "fr-FR"; u.rate = CFG.lecture.vitesse || 0.95;
-      var v = speechSynthesis.getVoices().filter(function (x) { return /^fr/i.test(x.lang); });
-      var pref = v.filter(function (x) { return /fr-CH|fr-FR/i.test(x.lang); })[0] || v[0]; if (pref) u.voice = pref;
-      speechSynthesis.speak(u);
+      var v = voixChoisie || majVoix();
+      morceaux(text).forEach(function (m) {
+        var u = new SpeechSynthesisUtterance(m);
+        u.lang = v ? v.lang : "fr-FR"; if (v) u.voice = v;
+        u.rate = CFG.lecture.vitesse || 0.95; u.pitch = CFG.lecture.hauteur || 1;
+        speechSynthesis.speak(u);
+      });
     } catch (e) { /* pas de voix : tant pis */ }
   }
   function speakStop() { if (canSpeak) try { speechSynthesis.cancel(); } catch (e) { } }
@@ -325,11 +379,20 @@
   function niveauLabel(d) { return ["", "Facile", "Moyen", "Difficile"][d] || ""; }
 
   /* ---------- Vues ---------- */
-  function tenueIco() { var t = (CFG.tenues || []).filter(function (x) { return x.id === state.tenue; })[0]; return t ? t.ico : ""; }
+  function tenuesPortees() { return tenuesValides(String(state.tenue || "").split(/\s+/)); }
+  /* La mascotte et ses accessoires : chaque accessoire est dessiné dans le MÊME repère (viewBox 0 0 200 220)
+   * que l'image de la mascotte, sur un calque qui la recouvre exactement (100 % × 100 %). Il suit donc
+   * la tête, les yeux et le corps à toutes les tailles, sur tous les écrans. Calque « derriere » = dans le dos. */
+  function calque(ts, cote) {
+    var g = ts.map(function (t) { var d = cote === "derriere" ? t.svgDos : t.svg; return d ? '<g class="acc" data-acc="' + t.id + '">' + d + "</g>" : ""; }).join("");
+    return g ? '<svg class="calque ' + cote + '" viewBox="0 0 200 220" aria-hidden="true" focusable="false">' + g + "</svg>" : "";
+  }
   function mascot(size, cls) {
-    var t = tenueIco();
-    return '<span class="mascotte ' + (cls || "") + '" style="width:' + size + 'px"><img src="' + CFG.mascotte.image + '" alt="' + esc(CFG.mascotte.nom + ", " + CFG.mascotte.description) + '" width="' + size + '" height="' + size + '">' +
-      (t ? '<span class="tenue" aria-hidden="true">' + t + "</span>" : "") + "</span>";
+    var ts = tenuesPortees();
+    var alt = CFG.mascotte.nom + ", " + CFG.mascotte.description + (ts.length ? ", avec " + ts.map(function (t) { return t.nom.toLowerCase(); }).join(" et ") : "");
+    return '<span class="mascotte ' + (cls || "") + '" style="width:' + size + 'px">' + calque(ts, "derriere") +
+      '<img src="' + CFG.mascotte.image + '" alt="' + esc(alt) + '" width="' + size + '" height="' + Math.round(size * 1.1) + '">' +
+      calque(ts, "devant") + "</span>";
   }
 
   routes[""] = function () {
@@ -504,7 +567,7 @@
   };
 
   routes.album = function () {
-    var s = state.stats, r = rang();
+    var s = state.stats, r = rang(), portees = tenuesPortees().map(function (t) { return t.id; });
     app.innerHTML = '<h1 tabindex="-1">🏅 Mon album</h1>' +
       '<div class="panel rangbox">' + mascot(90) + '<div><h2 class="h3">' + (r.nom ? "Rang : " + esc(r.nom) : "Mon rang") + "</h2>" +
       (r.next ? '<p>Encore <b>' + (r.next.etoiles - state.etoiles) + " ⭐</b> pour devenir <b>" + esc(r.next.nom) + '</b>.</p><div class="progress" aria-hidden="true"><i style="width:' + Math.round(Math.max(0, state.etoiles - r.bas) / Math.max(1, r.next.etoiles - r.bas) * 100) + '%"></i></div>' : "<p>Tu as atteint le plus haut rang ! 🏆</p>") + "</div></div>" +
@@ -512,9 +575,9 @@
       [["⭐", state.etoiles, "étoiles"], ["✅", s.bonnes, "bonnes réponses"], ["❓", s.repondues, "questions jouées"], ["⏱️", s.chrono, "record chrono"], ["🥅", s.buts, "buts marqués"], ["📅", s.jours, "questions du jour"]]
         .map(function (x) { return '<div class="stat"><span aria-hidden="true">' + x[0] + "</span><b>" + x[1] + "</b>" + x[2] + "</div>"; }).join("") +
       "</div>" +
-      ((CFG.tenues || []).length ? '<h2 class="section">La tenue de ' + esc(CFG.mascotte.nom) + '</h2><p class="muted">Gagne des étoiles pour débloquer des accessoires.</p><div class="choice-group" id="tenues">' +
-        '<button type="button" class="btn blanc" data-t="" aria-pressed="' + (state.tenue === "") + '">🙂 Sans rien</button>' +
-        CFG.tenues.map(function (t) { var ok = state.etoiles >= t.etoiles; return '<button type="button" class="btn blanc" data-t="' + t.id + '" aria-pressed="' + (state.tenue === t.id) + '"' + (ok ? "" : " disabled") + ">" + t.ico + " " + esc(t.nom) + (ok ? "" : " · " + t.etoiles + " ⭐") + "</button>"; }).join("") + "</div>" : "") +
+      ((CFG.tenues || []).length ? '<h2 class="section">La tenue de ' + esc(CFG.mascotte.nom) + '</h2><p class="muted">Gagne des étoiles pour débloquer des accessoires. Tu peux en porter plusieurs à la fois !</p><div class="tenue-zone">' + mascot(130, "apercu") + '<div class="choice-group" id="tenues">' +
+        '<button type="button" class="btn blanc" data-t="" aria-pressed="' + (!portees.length) + '">🙂 Sans rien</button>' +
+        CFG.tenues.map(function (t) { var ok = state.etoiles >= t.etoiles; return '<button type="button" class="btn blanc" data-t="' + t.id + '" aria-pressed="' + (portees.indexOf(t.id) >= 0) + '"' + (ok ? "" : " disabled") + ">" + t.ico + " " + esc(t.nom) + (ok ? "" : " · " + t.etoiles + " ⭐") + "</button>"; }).join("") + "</div></div>" : "") +
       '<h2 class="section">Badges (' + Object.keys(state.badges).length + "/" + CFG.badges.length + ')</h2><div class="badges">' +
       CFG.badges.map(function (b) {
         var ok = !!state.badges[b.id];
@@ -522,7 +585,15 @@
       }).join("") + "</div>" +
       '<h2 class="section">Par univers</h2><div class="stats">' + CFG.univers.map(function (u) { return '<div class="stat"><span aria-hidden="true">' + u.emoji + "</span><b>" + (s["u_" + u.id] || 0) + "</b>" + esc(u.nom) + "</div>"; }).join("") + "</div>" +
       '<p class="row"><a class="btn blanc" href="#/">← Accueil</a><a class="btn blanc" href="parents.html#sauvegarde">💾 Sauvegarder ma progression</a><button type="button" class="btn blanc" id="reset">Tout remettre à zéro</button></p><div id="resetbox"></div>';
-    app.querySelectorAll("#tenues .btn").forEach(function (b) { b.addEventListener("click", function () { state.tenue = b.dataset.t; save(); routes.album(); }); });
+    app.querySelectorAll("#tenues .btn").forEach(function (b) { b.addEventListener("click", function () {
+      var id = b.dataset.t, t = CFG.tenues.filter(function (x) { return x.id === id; })[0];
+      if (!t) portees = []; // « Sans rien »
+      else if (portees.indexOf(id) >= 0) portees = portees.filter(function (x) { return x !== id; }); // on l'enlève
+      else portees = [id].concat(portees.filter(function (x) { var o = CFG.tenues.filter(function (y) { return y.id === x; })[0]; return o && (o.place || o.id) !== (t.place || t.id); })); // remplace celui du même emplacement
+      state.tenue = tenuesValides(portees).map(function (x) { return x.id; }).join(" ");
+      var y = window.scrollY; save(); routes.album(); window.scrollTo(0, y);
+      var nb = app.querySelector('#tenues [data-t="' + id + '"]'); if (nb) nb.focus({ preventScroll: true });
+    }); });
     app.querySelector("#reset").addEventListener("click", function () { parentGate(app.querySelector("#resetbox"), function () { resetAll(); routes.album(); toast("Tout a été remis à zéro."); }); });
   };
 
@@ -607,7 +678,7 @@
   window.APP = { cfg: CFG, state: function () { return state; }, save: save, addStars: addStars, bump: bump, setMax: setMax, checkBadges: checkBadges, badgesHtml: badgesHtml,
     draw: draw, nextQuestion: nextQuestion, renderQuestion: renderQuestion, routes: routes, esc: esc, shuffle: shuffle, mascot: mascot, toast: toast, go: go,
     all: function () { return ALL; }, byId: function (id) { return BYID[id]; }, later: later, every: every, stop: stop, newView: newView, speak: speak, canSpeak: function () { return canSpeak; },
-    dailyFor: dailyFor, exportCode: exportCode, importCode: importCode, restoreAuto: restoreAuto, sanitize: sanitize, parentGate: parentGate, resetAll: resetAll,
+    dailyFor: dailyFor, exportCode: exportCode, importCode: importCode, restoreAuto: restoreAuto, sanitize: sanitize, parentGate: parentGate, voix: function () { return canSpeak ? (voixChoisie || majVoix()) : null; }, choisirVoix: choisirVoix, resetAll: resetAll,
     hist: function () { return HIST; }, loadData: loadData, buildPool: buildPool,
     onResize: onResize, enSortant: enSortant, garde: garde, bloque: bloque, topH: topH, viewH: viewH, fige: fige, majEcran: majEcran, montrer: montrer };
 

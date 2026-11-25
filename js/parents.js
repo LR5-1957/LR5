@@ -14,8 +14,16 @@
         C.univers.map(function (u) { return "<tr><th scope=\"row\">" + u.emoji + " " + A.esc(u.nom) + "</th><td>" + (st["u_" + u.id] || 0) + " bonnes réponses</td></tr>"; }).join("") +
         "<tr><th scope=\"row\">Erreurs à revoir</th><td>" + s.erreurs.length + " (" + (st.corrigees || 0) + " déjà corrigées)</td></tr>" +
         "<tr><th scope=\"row\">Badges</th><td>" + Object.keys(s.badges).length + " / " + C.badges.length + "</td></tr>" +
-        "<tr><th scope=\"row\">Questions disponibles</th><td>" + all.length + "</td></tr></tbody></table>";
+        "<tr><th scope=\"row\">Questions disponibles</th><td>" + all.length + "</td></tr>" +
+        (C.lecture ? "<tr><th scope=\"row\">Voix de lecture 🔊</th><td id=\"voix-info\">" + voixTexte() + "</td></tr>" : "") + "</tbody></table>";
     }
+    function voixTexte() {
+      var v = A.voix && A.voix();
+      if (!window.speechSynthesis) return "Pas de lecture à voix haute sur ce navigateur.";
+      return v ? A.esc(v.name) + " (" + A.esc(v.lang) + ")" : "Voix française par défaut de l’appareil";
+    }
+    function majVoix() { var td = document.getElementById("voix-info"); if (td) td.innerHTML = voixTexte(); }
+    try { if (window.speechSynthesis && speechSynthesis.addEventListener) speechSynthesis.addEventListener("voiceschanged", function () { setTimeout(majVoix, 0); }); } catch (e) { }
     function render() {
       box.innerHTML =
         '<h2 id="progression">La progression sur cet appareil</h2>' + stats() +

@@ -3,7 +3,7 @@
  * (donc tes modifications sur GitHub arrivent tout de suite) ; sinon on sert la copie gardée.
  * La liste et la version ci-dessous sont remplies par le script de préparation du site.
  * Pas besoin d'y toucher quand on corrige une question : la version en ligne passe toujours en premier. */
-var VERSION = "lr5-194a098c33";
+var VERSION = "lr5-03a9f535d9";
 var CACHE = "quiz-" + VERSION;
 var FICHIERS = [
   "./",

@@ -1,5 +1,12 @@
 # Journal des changements · lr5.ch
 
+## Version 5 · novembre 2026 : accessoires sur la mascotte et voix féminine
+
+- **Accessoires bien portés par Lino** : la casquette et la couronne sont posées sur la tête, les lunettes sur les yeux, la fusée dans le dos (avec ses bretelles). Avant, l'accessoire était un petit dessin collé dans le coin, à côté de la mascotte. Ils sont maintenant dessinés dans le même cadre que Lino, donc ils restent à leur place à toutes les tailles : accueil, album, écran de score, téléphone, tablette, ordinateur, zoom, grand texte, rotation.
+- **Plusieurs accessoires à la fois** : lunettes + casquette + fusée, par exemple (une seule chose sur la tête). Toucher à nouveau un accessoire l'enlève, « Sans rien » enlève tout. Un aperçu de Lino est affiché à côté des boutons. La tenue déjà choisie en v4 est gardée.
+- **Voix française féminine** pour le bouton 🔊 : le site choisit la plus naturelle de l'appareil (Audrey, Aurélie, Marie ou Amélie sur iPhone/iPad/Mac, Denise sur Edge, « Google français » sur Chrome, la voix française d'Android), jamais une voix d'homme s'il existe une voix de femme. Lecture un peu plus posée, phrase par phrase. La voix utilisée s'affiche dans l'espace parents.
+- Version du cache changée : les appareils prennent la nouvelle version tout seuls.
+
 ## Version 4 · novembre 2026 : contre-vérification complète
 
 ### Jeux
